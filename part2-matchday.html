@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Cup: Geopolitics and the Balance of Power</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background: #f7f7f5;
+    color: #1a1a1a;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .subtitle {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 36px;
+  }
+  section {
+    background: #ffffff;
+    border: 1px solid #e2e2df;
+    border-radius: 10px;
+    padding: 24px 28px 28px;
+    margin-bottom: 28px;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .desc {
+    color: #666;
+    font-size: 13px;
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .1s;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 20;
+    white-space: nowrap;
+  }
+  .chart-container { position: relative; }
+  .axis text { fill: #888; font-size: 11px; }
+  .axis path, .axis line { stroke: #ddd; }
+  .hint { font-size: 11.5px; color: #999; margin-top: 10px; }
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #666;
+  }
+  .legend-row span.item { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <p style="margin:0 0 18px;"><a href="index.html" style="color:#1f77b4; text-decoration:none; font-size:13px;">&larr; Back to overview</a></p>
+  <h1>Part 2 — Match-day drama and psychology</h1>
+  <p class="subtitle">Zooming into the matches themselves: has the football gotten more cautious, when do goals actually happen, has fear of losing changed how knockout games end, and what really happens to the team that won it all last time.</p>
+
+<section id="goals-trend-section">
+    <h2>Viz 5 — Is the World Cup becoming more defensive?</h2>
+    <p class="desc">Average goals scored per match, every World Cup since 1930. The explosive mid-century era gives way to a much flatter, lower-scoring modern game.</p>
+    <div class="chart-container">
+      <div id="goalsTrendChart"></div>
+      <div class="tooltip" id="goalsTrendTooltip"></div>
+    </div>
+  </section>
+
+<section id="goal-timing-section">
+    <h2>Viz 6 — The psychology of the 90th minute</h2>
+    <p class="desc">All 2,720 World Cup goals, binned by when in the match they happened. The 45+ and 90+ bars isolate goals scored specifically in stoppage time — the moment fatigue, desperation, and a ticking clock collide.</p>
+    <div class="chart-container">
+      <div id="goalTimingChart"></div>
+      <div class="tooltip" id="goalTimingTooltip"></div>
+    </div>
+    <p class="hint">ET = extra time (all periods combined). Own goals are included, since they're still goals shaped by the same late-match pressure. Bins aren't all equal width in real minutes — the stoppage-time bins (45+, 90+) are typically only a few minutes long, and "ET" spans up to 30 — so treat bar height here as a goal count per labeled interval, not a strict density.</p>
+  </section>
+
+<section id="knockout-drama-section">
+    <h2>Viz 7 — The cruel tiebreaker</h2>
+    <p class="desc">Share of knockout-stage matches (not all matches — group games can't go to extra time) that were forced into extra time or a penalty shootout, by decade.</p>
+    <div class="legend-row" id="knockoutLegend"></div>
+    <div class="chart-container">
+      <div id="knockoutDramaChart"></div>
+      <div class="tooltip" id="knockoutDramaTooltip"></div>
+    </div>
+  </section>
+
+<section id="champions-curse-section">
+    <h2>Viz 8 — The champion's curse</h2>
+    <p class="desc">Where the reigning champion finished at the very next World Cup. A dip toward the bottom means an early, shocking exit — watch the 2010→2018 stretch, where three straight defending champions (Italy, Spain, Germany) were knocked out in the group stage.</p>
+    <div class="chart-container">
+      <div id="cursesChart"></div>
+      <div class="tooltip" id="cursesTooltip"></div>
+    </div>
+    <p class="hint">Uruguay's 1930 title has no bar — reigning champions, they didn't even enter the 1934 tournament, in part retaliating against the European teams who'd snubbed the inaugural World Cup.</p>
+  </section>
+
+  <p class="hint">Goals and match data derive from the Fjelstul World Cup database, filtered to Men's World Cups only. "Furthest stage" scale: group stage (1) through final (6) / champion (7).</p>
+</div>
+
+<script>
+const goalsTrendData = [{"year": 1930, "goals": 70, "matches": 18, "avg": 3.889}, {"year": 1934, "goals": 70, "matches": 17, "avg": 4.118}, {"year": 1938, "goals": 84, "matches": 18, "avg": 4.667}, {"year": 1950, "goals": 88, "matches": 22, "avg": 4.0}, {"year": 1954, "goals": 140, "matches": 26, "avg": 5.385}, {"year": 1958, "goals": 126, "matches": 35, "avg": 3.6}, {"year": 1962, "goals": 89, "matches": 32, "avg": 2.781}, {"year": 1966, "goals": 89, "matches": 32, "avg": 2.781}, {"year": 1970, "goals": 95, "matches": 32, "avg": 2.969}, {"year": 1974, "goals": 97, "matches": 38, "avg": 2.553}, {"year": 1978, "goals": 102, "matches": 38, "avg": 2.684}, {"year": 1982, "goals": 146, "matches": 52, "avg": 2.808}, {"year": 1986, "goals": 132, "matches": 52, "avg": 2.538}, {"year": 1990, "goals": 115, "matches": 52, "avg": 2.212}, {"year": 1994, "goals": 141, "matches": 52, "avg": 2.712}, {"year": 1998, "goals": 171, "matches": 64, "avg": 2.672}, {"year": 2002, "goals": 161, "matches": 64, "avg": 2.516}, {"year": 2006, "goals": 147, "matches": 64, "avg": 2.297}, {"year": 2010, "goals": 145, "matches": 64, "avg": 2.266}, {"year": 2014, "goals": 171, "matches": 64, "avg": 2.672}, {"year": 2018, "goals": 169, "matches": 64, "avg": 2.641}, {"year": 2022, "goals": 172, "matches": 64, "avg": 2.688}];
+const goalTimingData = [{"bin": "0-15", "goals": 349}, {"bin": "16-30", "goals": 389}, {"bin": "31-45", "goals": 375}, {"bin": "45+", "goals": 32}, {"bin": "46-60", "goals": 442}, {"bin": "61-75", "goals": 483}, {"bin": "76-90", "goals": 500}, {"bin": "90+", "goals": 79}, {"bin": "ET", "goals": 71}];
+const knockoutDramaData = [{"decade": 1930, "total_knockout": 38, "et_pct": 23.7, "pens_pct": 0.0}, {"decade": 1950, "total_knockout": 16, "et_pct": 6.2, "pens_pct": 0.0}, {"decade": 1960, "total_knockout": 16, "et_pct": 6.2, "pens_pct": 0.0}, {"decade": 1970, "total_knockout": 12, "et_pct": 33.3, "pens_pct": 0.0}, {"decade": 1980, "total_knockout": 20, "et_pct": 30.0, "pens_pct": 20.0}, {"decade": 1990, "total_knockout": 48, "et_pct": 33.3, "pens_pct": 20.8}, {"decade": 2000, "total_knockout": 32, "et_pct": 34.4, "pens_pct": 18.8}, {"decade": 2010, "total_knockout": 48, "et_pct": 35.4, "pens_pct": 20.8}, {"decade": 2020, "total_knockout": 16, "et_pct": 31.2, "pens_pct": 31.2}];
+const championsCurseData = [{"defending_champion": "Uruguay", "won_year": 1930, "next_year": 1934, "result_rank": 0, "result_label": "Did not qualify"}, {"defending_champion": "Italy", "won_year": 1934, "next_year": 1938, "result_rank": 7, "result_label": "champions (repeat)"}, {"defending_champion": "Italy", "won_year": 1938, "next_year": 1950, "result_rank": 1, "result_label": "group stage"}, {"defending_champion": "Uruguay", "won_year": 1950, "next_year": 1954, "result_rank": 5, "result_label": "third-place match"}, {"defending_champion": "Germany", "won_year": 1954, "next_year": 1958, "result_rank": 5, "result_label": "third-place match"}, {"defending_champion": "Brazil", "won_year": 1958, "next_year": 1962, "result_rank": 7, "result_label": "champions (repeat)"}, {"defending_champion": "Brazil", "won_year": 1962, "next_year": 1966, "result_rank": 1, "result_label": "group stage"}, {"defending_champion": "England", "won_year": 1966, "next_year": 1970, "result_rank": 4, "result_label": "quarter-finals"}, {"defending_champion": "Brazil", "won_year": 1970, "next_year": 1974, "result_rank": 5, "result_label": "third-place match"}, {"defending_champion": "Germany", "won_year": 1974, "next_year": 1978, "result_rank": 2, "result_label": "second group stage"}, {"defending_champion": "Argentina", "won_year": 1978, "next_year": 1982, "result_rank": 2, "result_label": "second group stage"}, {"defending_champion": "Italy", "won_year": 1982, "next_year": 1986, "result_rank": 3, "result_label": "round of 16"}, {"defending_champion": "Argentina", "won_year": 1986, "next_year": 1990, "result_rank": 6, "result_label": "final"}, {"defending_champion": "Germany", "won_year": 1990, "next_year": 1994, "result_rank": 4, "result_label": "quarter-finals"}, {"defending_champion": "Brazil", "won_year": 1994, "next_year": 1998, "result_rank": 6, "result_label": "final"}, {"defending_champion": "France", "won_year": 1998, "next_year": 2002, "result_rank": 1, "result_label": "group stage"}, {"defending_champion": "Brazil", "won_year": 2002, "next_year": 2006, "result_rank": 4, "result_label": "quarter-finals"}, {"defending_champion": "Italy", "won_year": 2006, "next_year": 2010, "result_rank": 1, "result_label": "group stage"}, {"defending_champion": "Spain", "won_year": 2010, "next_year": 2014, "result_rank": 1, "result_label": "group stage"}, {"defending_champion": "Germany", "won_year": 2014, "next_year": 2018, "result_rank": 1, "result_label": "group stage"}, {"defending_champion": "France", "won_year": 2018, "next_year": 2022, "result_rank": 6, "result_label": "final"}];
+
+
+
+function renderGoalsTrend() {
+  const container = document.getElementById('goalsTrendChart');
+  const tooltip = document.getElementById('goalsTrendTooltip');
+  container.innerHTML = '';
+
+  const width = 900, height = 340;
+  const margin = { top: 16, right: 20, bottom: 54, left: 50 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const years = goalsTrendData.map(d => d.year);
+  const x = d3.scalePoint().domain(years).range([0, innerW]).padding(0.5);
+  const maxAvg = d3.max(goalsTrendData, d => d.avg) || 5;
+  const y = d3.scaleLinear().domain([0, maxAvg * 1.1]).range([innerH, 0]);
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).ticks(6).tickFormat(d3.format('.1f')).tickSize(-innerW))
+    .call(sel => sel.select('.domain').remove())
+    .call(sel => sel.selectAll('.tick line').attr('stroke', '#ececea'));
+
+  const xAxisG = g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format('d')));
+  xAxisG.selectAll('text')
+    .attr('transform', 'rotate(-45)')
+    .attr('text-anchor', 'end')
+    .attr('dx', '-0.4em')
+    .attr('dy', '0.3em');
+
+  g.append('text').attr('transform', 'rotate(-90)')
+    .attr('x', -innerH / 2).attr('y', -36)
+    .attr('text-anchor', 'middle').style('font-size', '12px').style('fill', '#666')
+    .text('Average goals per match');
+
+  const line = d3.line().x(d => x(d.year)).y(d => y(d.avg));
+  g.append('path')
+    .datum(goalsTrendData)
+    .attr('fill', 'none')
+    .attr('stroke', '#1f77b4')
+    .attr('stroke-width', 2.2)
+    .attr('stroke-linejoin', 'round')
+    .attr('stroke-linecap', 'round')
+    .attr('d', line);
+
+  g.selectAll('circle.trend-dot')
+    .data(goalsTrendData)
+    .join('circle')
+    .attr('cx', d => x(d.year))
+    .attr('cy', d => y(d.avg))
+    .attr('r', 4)
+    .attr('fill', '#1f77b4')
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 1.2)
+    .style('cursor', 'pointer')
+    .on('mousemove', function(event, d) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      tooltip.innerHTML = `<b>${d.year}</b><br>${d.goals} goals / ${d.matches} matches<br>${d.avg.toFixed(2)} per match`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+}
+
+renderGoalsTrend();
+window.addEventListener('resize', renderGoalsTrend);
+
+const TIMING_LABELS = {
+  '0-15': '0–15', '16-30': '16–30', '31-45': '31–45', '45+': '45+ (stoppage)',
+  '46-60': '46–60', '61-75': '61–75', '76-90': '76–90', '90+': '90+ (stoppage)', 'ET': 'Extra time'
+};
+const DRAMA_BINS = new Set(['45+', '90+']);
+
+function renderGoalTiming() {
+  const container = document.getElementById('goalTimingChart');
+  const tooltip = document.getElementById('goalTimingTooltip');
+  container.innerHTML = '';
+
+  const width = 780, height = 320;
+  const margin = { top: 16, right: 20, bottom: 60, left: 50 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleBand().domain(goalTimingData.map(d => d.bin)).range([0, innerW]).paddingInner(0).paddingOuter(0);
+  const maxGoals = d3.max(goalTimingData, d => d.goals) || 500;
+  const y = d3.scaleLinear().domain([0, maxGoals * 1.15]).range([innerH, 0]);
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).ticks(6).tickSize(-innerW))
+    .call(sel => sel.select('.domain').remove())
+    .call(sel => sel.selectAll('.tick line').attr('stroke', '#ececea'));
+
+  const xAxisG = g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(d3.axisBottom(x).tickFormat(b => TIMING_LABELS[b]));
+  xAxisG.selectAll('text')
+    .attr('transform', 'rotate(-30)')
+    .attr('text-anchor', 'end')
+    .attr('dx', '-0.4em')
+    .attr('dy', '0.3em');
+
+  g.append('text').attr('transform', 'rotate(-90)')
+    .attr('x', -innerH / 2).attr('y', -36)
+    .attr('text-anchor', 'middle').style('font-size', '12px').style('fill', '#666')
+    .text('Goals scored');
+
+  g.selectAll('rect.timing-bar')
+    .data(goalTimingData)
+    .join('rect')
+    .attr('x', d => x(d.bin))
+    .attr('width', x.bandwidth())
+    .attr('fill', d => DRAMA_BINS.has(d.bin) ? '#d62728' : (d.bin === 'ET' ? '#999' : '#1f77b4'))
+    .attr('stroke', '#f7f7f5')
+    .attr('stroke-width', 1.5)
+    .attr('y', innerH)
+    .attr('height', 0)
+    .style('cursor', 'pointer')
+    .on('mousemove', function(event, d) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      tooltip.innerHTML = `<b>Minute ${TIMING_LABELS[d.bin]}</b><br>${d.goals} goals`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .transition().duration(300)
+    .attr('y', d => y(d.goals))
+    .attr('height', d => innerH - y(d.goals));
+
+  g.selectAll('text.timing-label')
+    .data(goalTimingData)
+    .join('text')
+    .attr('x', d => x(d.bin) + x.bandwidth() / 2)
+    .attr('y', d => y(d.goals) - 6)
+    .attr('text-anchor', 'middle')
+    .style('font-size', '11px').style('font-weight', '600').style('fill', '#444')
+    .text(d => d.goals);
+}
+
+renderGoalTiming();
+window.addEventListener('resize', renderGoalTiming);
+
+const dramaColors = { et: '#f4a261', pens: '#8c1c1c' };
+
+(function buildKnockoutLegend() {
+  const el = document.getElementById('knockoutLegend');
+  const items = [['Extra time', dramaColors.et], ['Penalty shootout', dramaColors.pens]];
+  items.forEach(([label, color]) => {
+    const item = document.createElement('span');
+    item.className = 'item';
+    item.innerHTML = `<span class="swatch" style="background:${color}"></span>${label}`;
+    el.appendChild(item);
+  });
+})();
+
+function renderKnockoutDrama() {
+  const container = document.getElementById('knockoutDramaChart');
+  const tooltip = document.getElementById('knockoutDramaTooltip');
+  container.innerHTML = '';
+
+  const width = 780, height = 320;
+  const margin = { top: 16, right: 20, bottom: 40, left: 46 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const decades = knockoutDramaData.map(d => d.decade);
+  const x0 = d3.scaleBand().domain(decades).range([0, innerW]).paddingInner(0.3);
+  const x1 = d3.scaleBand().domain(['et', 'pens']).range([0, x0.bandwidth()]).padding(0.15);
+  const y = d3.scaleLinear().domain([0, 40]).range([innerH, 0]);
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).ticks(8).tickFormat(d => d + '%').tickSize(-innerW))
+    .call(sel => sel.select('.domain').remove())
+    .call(sel => sel.selectAll('.tick line').attr('stroke', '#ececea'));
+
+  g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(d3.axisBottom(x0).tickFormat(d => d + 's'));
+
+  const groups = g.selectAll('g.decade-group').data(knockoutDramaData).join('g')
+    .attr('transform', d => `translate(${x0(d.decade)},0)`);
+
+  ['et', 'pens'].forEach(key => {
+    groups.append('rect')
+      .attr('x', x1(key))
+      .attr('width', x1.bandwidth())
+      .attr('rx', 3)
+      .attr('fill', dramaColors[key])
+      .attr('y', innerH)
+      .attr('height', 0)
+      .style('cursor', 'pointer')
+      .on('mousemove', function(event, d) {
+        const rect = container.getBoundingClientRect();
+        const val = key === 'et' ? d.et_pct : d.pens_pct;
+        const label = key === 'et' ? 'Extra time' : 'Penalty shootout';
+        tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+        tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+        tooltip.style.opacity = '1';
+        tooltip.innerHTML = `<b>${d.decade}s · ${label}</b><br>${val}% of ${d.total_knockout} knockout matches`;
+      })
+      .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+      .transition().duration(300)
+      .attr('y', d => y(key === 'et' ? d.et_pct : d.pens_pct))
+      .attr('height', d => innerH - y(key === 'et' ? d.et_pct : d.pens_pct));
+  });
+}
+
+renderKnockoutDrama();
+window.addEventListener('resize', renderKnockoutDrama);
+
+const CURSE_RANK_LABEL = {0:'Did not qualify',1:'Group stage',2:'2nd group stage',3:'Round of 16',4:'Quarter-final',5:'Semi-final',6:'Final',7:'Champions again'};
+
+function renderCurses() {
+  const container = document.getElementById('cursesChart');
+  const tooltip = document.getElementById('cursesTooltip');
+  container.innerHTML = '';
+
+  const width = 860, height = 380;
+  const margin = { top: 16, right: 20, bottom: 40, left: 110 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const years = championsCurseData.map(d => d.next_year);
+  const x = d3.scalePoint().domain(years).range([0, innerW]).padding(0.5);
+  const y = d3.scaleLinear().domain([0, 7]).range([innerH, 0]);
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).tickValues([0,1,2,3,4,5,6,7]).tickFormat(r => CURSE_RANK_LABEL[r]).tickSize(-innerW))
+    .call(sel => sel.select('.domain').remove())
+    .call(sel => sel.selectAll('.tick line').attr('stroke', '#ececea'))
+    .selectAll('text').style('font-size', '10.5px');
+
+  g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format('d')));
+
+  const line = d3.line().x(d => x(d.next_year)).y(d => y(d.result_rank));
+  g.append('path')
+    .datum(championsCurseData)
+    .attr('fill', 'none')
+    .attr('stroke', '#ccc')
+    .attr('stroke-width', 1.5)
+    .attr('d', line);
+
+  g.selectAll('circle.curse-dot')
+    .data(championsCurseData)
+    .join('circle')
+    .attr('cx', d => x(d.next_year))
+    .attr('cy', d => y(d.result_rank))
+    .attr('r', 6)
+    .attr('fill', d => d.result_rank <= 1 ? '#d62728' : (d.result_rank === 7 ? '#d4af37' : '#1f77b4'))
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 1.4)
+    .style('cursor', 'pointer')
+    .on('mousemove', function(event, d) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      tooltip.innerHTML = `<b>${d.defending_champion}</b> · defending ${d.won_year} title<br>${d.next_year}: ${CURSE_RANK_LABEL[d.result_rank]}`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+}
+
+renderCurses();
+window.addEventListener('resize', renderCurses);
+</script>
+</body>
+</html>

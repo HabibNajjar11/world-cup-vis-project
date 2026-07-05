@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Cup: Geopolitics and the Balance of Power</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background: #f7f7f5;
+    color: #1a1a1a;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .subtitle {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 36px;
+  }
+  section {
+    background: #ffffff;
+    border: 1px solid #e2e2df;
+    border-radius: 10px;
+    padding: 24px 28px 28px;
+    margin-bottom: 28px;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .desc {
+    color: #666;
+    font-size: 13px;
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .1s;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 20;
+    white-space: nowrap;
+  }
+  .chart-container { position: relative; }
+  .axis text { fill: #888; font-size: 11px; }
+  .axis path, .axis line { stroke: #ddd; }
+  .hint { font-size: 11.5px; color: #999; margin-top: 10px; }
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #666;
+  }
+  .legend-row span.item { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <p style="margin:0 0 18px;"><a href="index.html" style="color:#1f77b4; text-decoration:none; font-size:13px;">&larr; Back to overview</a></p>
+  <h1>Part 1 — Geopolitics and the balance of power</h1>
+  <p class="subtitle">How the global expansion of football has (and hasn't) shifted the tournament's center of gravity. Men's FIFA World Cup, 1930–2022, 22 editions.</p>
+
+<section id="confed-share-section">
+    <h2>Viz 1 — The rise of the confederations</h2>
+    <p class="desc">Share of all participating teams from each confederation, at every World Cup since 1930. A widening band means that confederation is claiming a bigger slice of the tournament; a shrinking one means it's losing ground, even as the tournament itself has grown from 13 teams to 32 (and 48 from 2026).</p>
+    <div class="legend-row" id="confedLegend"></div>
+    <div class="chart-container">
+      <div id="confedShareChart"></div>
+      <div class="tooltip" id="confedShareTooltip"></div>
+    </div>
+  </section>
+
+<section id="stage-heatmap-section">
+    <h2>Viz 2 — The knockout-stage glass ceiling</h2>
+    <p class="desc">Furthest stage reached by any team from each confederation, at every World Cup. Darker means a deeper run. Hover a cell to see which team actually got there — this is the clearest test of whether Africa and Asia are closing the gap on Europe and South America, or whether a structural ceiling still holds.</p>
+    <div class="chart-container">
+      <div id="stageHeatmap"></div>
+      <div class="tooltip" id="stageHeatmapTooltip"></div>
+    </div>
+    <div class="legend-row" id="stageLegend" style="margin-top:14px; margin-bottom:0;"></div>
+  </section>
+
+<section id="winners-pie-section">
+    <h2>Viz 3 — Who actually wins it</h2>
+    <p class="desc">Share of all 22 Men's World Cup titles won by each confederation. Slices ordered largest to smallest, starting at 12 o'clock. This is the sharpest version of the glass-ceiling story: reaching a semi-final is rare enough for Africa and Asia — actually winning has never happened for either, or for CONCACAF or Oceania. Click the UEFA or CONMEBOL slice to see which countries within it actually hold the titles.</p>
+    <div id="pieBackRow" style="display:none; margin-bottom:10px;">
+      <span id="pieBackBtn" style="font-size:12px; color:#666; cursor:pointer; border:1px solid #ccc; border-radius:6px; padding:4px 10px; background:#fff;">← Back to confederations</span>
+      <span id="pieDrillTitle" style="font-size:13px; font-weight:600; margin-left:10px;"></span>
+    </div>
+    <div style="display:flex; gap:32px; align-items:center; flex-wrap:wrap;">
+      <div class="chart-container">
+        <div id="winnersPie"></div>
+        <div class="tooltip" id="winnersPieTooltip"></div>
+      </div>
+      <div id="winnersLegend" style="display:flex; flex-direction:column; gap:8px; min-width:240px;"></div>
+    </div>
+  </section>
+
+<section id="host-advantage-section">
+    <h2>Viz 4 — Does hosting actually help?</h2>
+    <p class="desc">For every host nation, the furthest stage they reached while hosting (gold dot) against the average furthest stage that same country reached across all their <em>other</em> World Cup appearances (gray dot). A gold dot sitting well to the right of its gray partner means the home crowd corresponds with a real boost in performance.</p>
+    <div class="chart-container">
+      <div id="hostDumbbell"></div>
+      <div class="tooltip" id="hostDumbbellTooltip"></div>
+    </div>
+    <p class="hint">Qatar 2022 shows a single dot — it was Qatar's first-ever World Cup appearance, so there's no away-tournament history to compare against. South Africa 2010 had only 2 prior appearances, both group-stage exits, so its "average" is a thin sample.</p>
+  </section>
+
+  <p class="hint">Confederation and furthest-stage data both derive from FIFA's own qualified-teams records (the Fjelstul World Cup database). "Furthest stage" is ranked group stage &lt; 2nd group stage &lt; round of 16 &lt; quarter-final &lt; semi-final &lt; final (runner-up) &lt; champion. Filtered to Men's World Cups only — the same source also contains Women's World Cup data (1991–2019), not included here.</p>
+</div>
+
+<script>
+const confedShareData = [{"year": 1930, "confederation": "CONCACAF", "teams": 2, "total_teams": 13, "pct": 15.38}, {"year": 1930, "confederation": "CONMEBOL", "teams": 7, "total_teams": 13, "pct": 53.85}, {"year": 1930, "confederation": "UEFA", "teams": 4, "total_teams": 13, "pct": 30.77}, {"year": 1934, "confederation": "CAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1934, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1934, "confederation": "CONMEBOL", "teams": 2, "total_teams": 16, "pct": 12.5}, {"year": 1934, "confederation": "UEFA", "teams": 12, "total_teams": 16, "pct": 75.0}, {"year": 1938, "confederation": "AFC", "teams": 1, "total_teams": 15, "pct": 6.67}, {"year": 1938, "confederation": "CONCACAF", "teams": 1, "total_teams": 15, "pct": 6.67}, {"year": 1938, "confederation": "CONMEBOL", "teams": 1, "total_teams": 15, "pct": 6.67}, {"year": 1938, "confederation": "UEFA", "teams": 12, "total_teams": 15, "pct": 80.0}, {"year": 1950, "confederation": "CONCACAF", "teams": 2, "total_teams": 13, "pct": 15.38}, {"year": 1950, "confederation": "CONMEBOL", "teams": 5, "total_teams": 13, "pct": 38.46}, {"year": 1950, "confederation": "UEFA", "teams": 6, "total_teams": 13, "pct": 46.15}, {"year": 1954, "confederation": "AFC", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1954, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1954, "confederation": "CONMEBOL", "teams": 2, "total_teams": 16, "pct": 12.5}, {"year": 1954, "confederation": "UEFA", "teams": 12, "total_teams": 16, "pct": 75.0}, {"year": 1958, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1958, "confederation": "CONMEBOL", "teams": 3, "total_teams": 16, "pct": 18.75}, {"year": 1958, "confederation": "UEFA", "teams": 12, "total_teams": 16, "pct": 75.0}, {"year": 1962, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1962, "confederation": "CONMEBOL", "teams": 5, "total_teams": 16, "pct": 31.25}, {"year": 1962, "confederation": "UEFA", "teams": 10, "total_teams": 16, "pct": 62.5}, {"year": 1966, "confederation": "AFC", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1966, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1966, "confederation": "CONMEBOL", "teams": 4, "total_teams": 16, "pct": 25.0}, {"year": 1966, "confederation": "UEFA", "teams": 10, "total_teams": 16, "pct": 62.5}, {"year": 1970, "confederation": "CAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1970, "confederation": "CONCACAF", "teams": 2, "total_teams": 16, "pct": 12.5}, {"year": 1970, "confederation": "CONMEBOL", "teams": 3, "total_teams": 16, "pct": 18.75}, {"year": 1970, "confederation": "UEFA", "teams": 10, "total_teams": 16, "pct": 62.5}, {"year": 1974, "confederation": "AFC", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1974, "confederation": "CAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1974, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1974, "confederation": "CONMEBOL", "teams": 4, "total_teams": 16, "pct": 25.0}, {"year": 1974, "confederation": "UEFA", "teams": 9, "total_teams": 16, "pct": 56.25}, {"year": 1978, "confederation": "AFC", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1978, "confederation": "CAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1978, "confederation": "CONCACAF", "teams": 1, "total_teams": 16, "pct": 6.25}, {"year": 1978, "confederation": "CONMEBOL", "teams": 3, "total_teams": 16, "pct": 18.75}, {"year": 1978, "confederation": "UEFA", "teams": 10, "total_teams": 16, "pct": 62.5}, {"year": 1982, "confederation": "AFC", "teams": 1, "total_teams": 24, "pct": 4.17}, {"year": 1982, "confederation": "CAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1982, "confederation": "CONCACAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1982, "confederation": "CONMEBOL", "teams": 4, "total_teams": 24, "pct": 16.67}, {"year": 1982, "confederation": "OFC", "teams": 1, "total_teams": 24, "pct": 4.17}, {"year": 1982, "confederation": "UEFA", "teams": 14, "total_teams": 24, "pct": 58.33}, {"year": 1986, "confederation": "AFC", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1986, "confederation": "CAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1986, "confederation": "CONCACAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1986, "confederation": "CONMEBOL", "teams": 4, "total_teams": 24, "pct": 16.67}, {"year": 1986, "confederation": "UEFA", "teams": 14, "total_teams": 24, "pct": 58.33}, {"year": 1990, "confederation": "AFC", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1990, "confederation": "CAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1990, "confederation": "CONCACAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1990, "confederation": "CONMEBOL", "teams": 4, "total_teams": 24, "pct": 16.67}, {"year": 1990, "confederation": "UEFA", "teams": 14, "total_teams": 24, "pct": 58.33}, {"year": 1994, "confederation": "AFC", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1994, "confederation": "CAF", "teams": 3, "total_teams": 24, "pct": 12.5}, {"year": 1994, "confederation": "CONCACAF", "teams": 2, "total_teams": 24, "pct": 8.33}, {"year": 1994, "confederation": "CONMEBOL", "teams": 4, "total_teams": 24, "pct": 16.67}, {"year": 1994, "confederation": "UEFA", "teams": 13, "total_teams": 24, "pct": 54.17}, {"year": 1998, "confederation": "AFC", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 1998, "confederation": "CAF", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 1998, "confederation": "CONCACAF", "teams": 3, "total_teams": 32, "pct": 9.38}, {"year": 1998, "confederation": "CONMEBOL", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 1998, "confederation": "UEFA", "teams": 15, "total_teams": 32, "pct": 46.88}, {"year": 2002, "confederation": "AFC", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2002, "confederation": "CAF", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2002, "confederation": "CONCACAF", "teams": 3, "total_teams": 32, "pct": 9.38}, {"year": 2002, "confederation": "CONMEBOL", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2002, "confederation": "UEFA", "teams": 15, "total_teams": 32, "pct": 46.88}, {"year": 2006, "confederation": "AFC", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2006, "confederation": "CAF", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2006, "confederation": "CONCACAF", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2006, "confederation": "CONMEBOL", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2006, "confederation": "UEFA", "teams": 14, "total_teams": 32, "pct": 43.75}, {"year": 2010, "confederation": "AFC", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2010, "confederation": "CAF", "teams": 6, "total_teams": 32, "pct": 18.75}, {"year": 2010, "confederation": "CONCACAF", "teams": 3, "total_teams": 32, "pct": 9.38}, {"year": 2010, "confederation": "CONMEBOL", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2010, "confederation": "OFC", "teams": 1, "total_teams": 32, "pct": 3.12}, {"year": 2010, "confederation": "UEFA", "teams": 13, "total_teams": 32, "pct": 40.62}, {"year": 2014, "confederation": "AFC", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2014, "confederation": "CAF", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2014, "confederation": "CONCACAF", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2014, "confederation": "CONMEBOL", "teams": 6, "total_teams": 32, "pct": 18.75}, {"year": 2014, "confederation": "UEFA", "teams": 13, "total_teams": 32, "pct": 40.62}, {"year": 2018, "confederation": "AFC", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2018, "confederation": "CAF", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2018, "confederation": "CONCACAF", "teams": 3, "total_teams": 32, "pct": 9.38}, {"year": 2018, "confederation": "CONMEBOL", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2018, "confederation": "UEFA", "teams": 14, "total_teams": 32, "pct": 43.75}, {"year": 2022, "confederation": "AFC", "teams": 6, "total_teams": 32, "pct": 18.75}, {"year": 2022, "confederation": "CAF", "teams": 5, "total_teams": 32, "pct": 15.62}, {"year": 2022, "confederation": "CONCACAF", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2022, "confederation": "CONMEBOL", "teams": 4, "total_teams": 32, "pct": 12.5}, {"year": 2022, "confederation": "UEFA", "teams": 13, "total_teams": 32, "pct": 40.62}];
+const stageHeatmapData = [{"year": 1938, "confederation": "AFC", "rank": 3, "stage": "Round of 16", "team": "Dutch East Indies"}, {"year": 1954, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "South Korea"}, {"year": 1966, "confederation": "AFC", "rank": 4, "stage": "Quarter-final", "team": "North Korea"}, {"year": 1974, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "Australia"}, {"year": 1978, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "Iran"}, {"year": 1982, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "Kuwait"}, {"year": 1986, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "Iraq"}, {"year": 1990, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "South Korea"}, {"year": 1994, "confederation": "AFC", "rank": 3, "stage": "Round of 16", "team": "Saudi Arabia"}, {"year": 1998, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "Iran"}, {"year": 2002, "confederation": "AFC", "rank": 5, "stage": "Semi-final", "team": "South Korea"}, {"year": 2006, "confederation": "AFC", "rank": 3, "stage": "Round of 16", "team": "Australia"}, {"year": 2010, "confederation": "AFC", "rank": 3, "stage": "Round of 16", "team": "Japan"}, {"year": 2014, "confederation": "AFC", "rank": 1, "stage": "Group stage", "team": "Australia"}, {"year": 2018, "confederation": "AFC", "rank": 3, "stage": "Round of 16", "team": "Japan"}, {"year": 2022, "confederation": "AFC", "rank": 3, "stage": "Round of 16", "team": "Australia"}, {"year": 1934, "confederation": "CAF", "rank": 3, "stage": "Round of 16", "team": "Egypt"}, {"year": 1970, "confederation": "CAF", "rank": 1, "stage": "Group stage", "team": "Morocco"}, {"year": 1974, "confederation": "CAF", "rank": 1, "stage": "Group stage", "team": "Zaire"}, {"year": 1978, "confederation": "CAF", "rank": 1, "stage": "Group stage", "team": "Tunisia"}, {"year": 1982, "confederation": "CAF", "rank": 1, "stage": "Group stage", "team": "Algeria"}, {"year": 1986, "confederation": "CAF", "rank": 3, "stage": "Round of 16", "team": "Morocco"}, {"year": 1990, "confederation": "CAF", "rank": 4, "stage": "Quarter-final", "team": "Cameroon"}, {"year": 1994, "confederation": "CAF", "rank": 3, "stage": "Round of 16", "team": "Nigeria"}, {"year": 1998, "confederation": "CAF", "rank": 3, "stage": "Round of 16", "team": "Nigeria"}, {"year": 2002, "confederation": "CAF", "rank": 4, "stage": "Quarter-final", "team": "Senegal"}, {"year": 2006, "confederation": "CAF", "rank": 3, "stage": "Round of 16", "team": "Ghana"}, {"year": 2010, "confederation": "CAF", "rank": 4, "stage": "Quarter-final", "team": "Ghana"}, {"year": 2014, "confederation": "CAF", "rank": 3, "stage": "Round of 16", "team": "Algeria"}, {"year": 2018, "confederation": "CAF", "rank": 1, "stage": "Group stage", "team": "Egypt"}, {"year": 2022, "confederation": "CAF", "rank": 5, "stage": "Semi-final", "team": "Morocco"}, {"year": 1930, "confederation": "CONCACAF", "rank": 5, "stage": "Semi-final", "team": "United States"}, {"year": 1934, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "United States"}, {"year": 1938, "confederation": "CONCACAF", "rank": 4, "stage": "Quarter-final", "team": "Cuba"}, {"year": 1950, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Mexico"}, {"year": 1954, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Mexico"}, {"year": 1958, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Mexico"}, {"year": 1962, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Mexico"}, {"year": 1966, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Mexico"}, {"year": 1970, "confederation": "CONCACAF", "rank": 4, "stage": "Quarter-final", "team": "Mexico"}, {"year": 1974, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Haiti"}, {"year": 1978, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "Mexico"}, {"year": 1982, "confederation": "CONCACAF", "rank": 1, "stage": "Group stage", "team": "El Salvador"}, {"year": 1986, "confederation": "CONCACAF", "rank": 4, "stage": "Quarter-final", "team": "Mexico"}, {"year": 1990, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "Costa Rica"}, {"year": 1994, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "Mexico"}, {"year": 1998, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "Mexico"}, {"year": 2002, "confederation": "CONCACAF", "rank": 4, "stage": "Quarter-final", "team": "United States"}, {"year": 2006, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "Mexico"}, {"year": 2010, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "Mexico"}, {"year": 2014, "confederation": "CONCACAF", "rank": 4, "stage": "Quarter-final", "team": "Costa Rica"}, {"year": 2018, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "Mexico"}, {"year": 2022, "confederation": "CONCACAF", "rank": 3, "stage": "Round of 16", "team": "United States"}, {"year": 1930, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Uruguay"}, {"year": 1934, "confederation": "CONMEBOL", "rank": 3, "stage": "Round of 16", "team": "Argentina"}, {"year": 1938, "confederation": "CONMEBOL", "rank": 5, "stage": "Semi-final", "team": "Brazil"}, {"year": 1950, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Uruguay"}, {"year": 1954, "confederation": "CONMEBOL", "rank": 5, "stage": "Semi-final", "team": "Uruguay"}, {"year": 1958, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Brazil"}, {"year": 1962, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Brazil"}, {"year": 1966, "confederation": "CONMEBOL", "rank": 4, "stage": "Quarter-final", "team": "Argentina"}, {"year": 1970, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Brazil"}, {"year": 1974, "confederation": "CONMEBOL", "rank": 5, "stage": "Semi-final", "team": "Brazil"}, {"year": 1978, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Argentina"}, {"year": 1982, "confederation": "CONMEBOL", "rank": 2, "stage": "2nd group stage", "team": "Argentina"}, {"year": 1986, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Argentina"}, {"year": 1990, "confederation": "CONMEBOL", "rank": 6, "stage": "Final (runner-up)", "team": "Argentina"}, {"year": 1994, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Brazil"}, {"year": 1998, "confederation": "CONMEBOL", "rank": 6, "stage": "Final (runner-up)", "team": "Brazil"}, {"year": 2002, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Brazil"}, {"year": 2006, "confederation": "CONMEBOL", "rank": 4, "stage": "Quarter-final", "team": "Argentina"}, {"year": 2010, "confederation": "CONMEBOL", "rank": 5, "stage": "Semi-final", "team": "Uruguay"}, {"year": 2014, "confederation": "CONMEBOL", "rank": 6, "stage": "Final (runner-up)", "team": "Argentina"}, {"year": 2018, "confederation": "CONMEBOL", "rank": 4, "stage": "Quarter-final", "team": "Brazil"}, {"year": 2022, "confederation": "CONMEBOL", "rank": 7, "stage": "Champion", "team": "Argentina"}, {"year": 1982, "confederation": "OFC", "rank": 1, "stage": "Group stage", "team": "New Zealand"}, {"year": 2010, "confederation": "OFC", "rank": 1, "stage": "Group stage", "team": "New Zealand"}, {"year": 1930, "confederation": "UEFA", "rank": 5, "stage": "Semi-final", "team": "Yugoslavia"}, {"year": 1934, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "Italy"}, {"year": 1938, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "Italy"}, {"year": 1950, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Spain"}, {"year": 1954, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "West Germany"}, {"year": 1958, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Sweden"}, {"year": 1962, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Czechoslovakia"}, {"year": 1966, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "England"}, {"year": 1970, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Italy"}, {"year": 1974, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "West Germany"}, {"year": 1978, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Netherlands"}, {"year": 1982, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "Italy"}, {"year": 1986, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "West Germany"}, {"year": 1990, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "West Germany"}, {"year": 1994, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Italy"}, {"year": 1998, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "France"}, {"year": 2002, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "Germany"}, {"year": 2006, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "Italy"}, {"year": 2010, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "Spain"}, {"year": 2014, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "Germany"}, {"year": 2018, "confederation": "UEFA", "rank": 7, "stage": "Champion", "team": "France"}, {"year": 2022, "confederation": "UEFA", "rank": 6, "stage": "Final (runner-up)", "team": "France"}];
+const hostAdvantageData = [{"team": "Uruguay", "host_year": 1930, "host_rank": 7, "host_stage": "champions", "away_avg_rank": 3.31, "away_tournaments_count": 13}, {"team": "Italy", "host_year": 1934, "host_rank": 7, "host_stage": "champions", "away_avg_rank": 3.53, "away_tournaments_count": 17}, {"team": "France", "host_year": 1938, "host_rank": 4, "host_stage": "quater-finals", "away_avg_rank": 3.6, "away_tournaments_count": 15}, {"team": "Brazil", "host_year": 1950, "host_rank": 6, "host_stage": "runners-up", "away_avg_rank": 4.52, "away_tournaments_count": 21}, {"team": "Switzerland", "host_year": 1954, "host_rank": 4, "host_stage": "quarter-final", "away_avg_rank": 2.45, "away_tournaments_count": 11}, {"team": "Sweden", "host_year": 1958, "host_rank": 6, "host_stage": "runners-up", "away_avg_rank": 3.18, "away_tournaments_count": 11}, {"team": "Chile", "host_year": 1962, "host_rank": 5, "host_stage": "third place", "away_avg_rank": 1.75, "away_tournaments_count": 8}, {"team": "England", "host_year": 1966, "host_rank": 7, "host_stage": "champions", "away_avg_rank": 3.27, "away_tournaments_count": 15}, {"team": "Mexico", "host_year": 1970, "host_rank": 4, "host_stage": "quater-finals", "away_avg_rank": 2.06, "away_tournaments_count": 16}, {"team": "West Germany", "host_year": 1974, "host_rank": 7, "host_stage": "champions", "away_avg_rank": 4.68, "away_tournaments_count": 19}, {"team": "Argentina", "host_year": 1978, "host_rank": 7, "host_stage": "champions", "away_avg_rank": 3.76, "away_tournaments_count": 17}, {"team": "Spain", "host_year": 1982, "host_rank": 2, "host_stage": "second group stage", "away_avg_rank": 3.07, "away_tournaments_count": 15}, {"team": "Mexico", "host_year": 1986, "host_rank": 4, "host_stage": "quater-finals", "away_avg_rank": 2.06, "away_tournaments_count": 16}, {"team": "Italy", "host_year": 1990, "host_rank": 5, "host_stage": "third place", "away_avg_rank": 3.65, "away_tournaments_count": 17}, {"team": "United States", "host_year": 1994, "host_rank": 3, "host_stage": "round of 16", "away_avg_rank": 2.5, "away_tournaments_count": 10}, {"team": "France", "host_year": 1998, "host_rank": 7, "host_stage": "champions", "away_avg_rank": 3.4, "away_tournaments_count": 15}, {"team": "Japan", "host_year": 2002, "host_rank": 3, "host_stage": "round of 16", "away_avg_rank": 2.0, "away_tournaments_count": 6}, {"team": "South Korea", "host_year": 2002, "host_rank": 5, "host_stage": "fourth place", "away_avg_rank": 1.4, "away_tournaments_count": 10}, {"team": "Germany", "host_year": 2006, "host_rank": 5, "host_stage": "third place", "away_avg_rank": 4.79, "away_tournaments_count": 19}, {"team": "South Africa", "host_year": 2010, "host_rank": 1, "host_stage": "group stage", "away_avg_rank": 1.0, "away_tournaments_count": 2}, {"team": "Brazil", "host_year": 2014, "host_rank": 5, "host_stage": "fourth place", "away_avg_rank": 4.57, "away_tournaments_count": 21}, {"team": "Russia", "host_year": 2018, "host_rank": 4, "host_stage": "quater-finals", "away_avg_rank": 1.0, "away_tournaments_count": 3}, {"team": "Qatar", "host_year": 2022, "host_rank": 1, "host_stage": "group stage", "away_avg_rank": null, "away_tournaments_count": 0}];
+const winnersByConfedData = [{"confederation": "CONMEBOL", "titles": 10}, {"confederation": "UEFA", "titles": 12}];
+const countryTitlesData = [{"confederation": "CONMEBOL", "country": "Brazil", "titles": 5}, {"confederation": "CONMEBOL", "country": "Argentina", "titles": 3}, {"confederation": "CONMEBOL", "country": "Uruguay", "titles": 2}, {"confederation": "UEFA", "country": "Italy", "titles": 4}, {"confederation": "UEFA", "country": "Germany", "titles": 4}, {"confederation": "UEFA", "country": "France", "titles": 2}, {"confederation": "UEFA", "country": "England", "titles": 1}, {"confederation": "UEFA", "country": "Spain", "titles": 1}];
+
+const confedOrder = ["UEFA","CONMEBOL","CAF","AFC","CONCACAF","OFC"];
+const confedColors = {
+  "UEFA": "#1f77b4",
+  "CONMEBOL": "#d62728",
+  "CAF": "#2ca02c",
+  "AFC": "#9467bd",
+  "CONCACAF": "#ff7f0e",
+  "OFC": "#8c8c8c"
+};
+const confedFullName = {
+  "UEFA": "UEFA (Europe)",
+  "CONMEBOL": "CONMEBOL (South America)",
+  "CAF": "CAF (Africa)",
+  "AFC": "AFC (Asia)",
+  "CONCACAF": "CONCACAF (North/Central America)",
+  "OFC": "OFC (Oceania)"
+};
+
+function textColorFor(hex) {
+  const c = d3.rgb(hex);
+  const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+}
+
+function renderConfedShare() {
+  const container = document.getElementById('confedShareChart');
+  const tooltip = document.getElementById('confedShareTooltip');
+  container.innerHTML = '';
+
+  const years = Array.from(new Set(confedShareData.map(d => d.year))).sort((a, b) => a - b);
+  const pivoted = years.map(yr => {
+    const row = { year: yr };
+    confedOrder.forEach(c => {
+      const rec = confedShareData.find(d => d.year === yr && d.confederation === c);
+      row[c] = rec ? rec.pct : 0;
+    });
+    return row;
+  });
+
+  const stackGen = d3.stack().keys(confedOrder);
+  const series = stackGen(pivoted);
+
+  const width = 900, height = 394;
+  const margin = { top: 16, right: 20, bottom: 54, left: 46 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scalePoint().domain(years).range([0, innerW]).padding(0.02);
+  const y = d3.scaleLinear().domain([0, 100]).range([innerH, 0]);
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + '%').tickSize(-innerW))
+    .call(sel => sel.select('.domain').remove())
+    .call(sel => sel.selectAll('.tick line').attr('stroke', '#ececea'));
+
+  const xAxisG = g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(d3.axisBottom(x).tickValues(years).tickFormat(d3.format('d')));
+  xAxisG.selectAll('text')
+    .attr('transform', 'rotate(-45)')
+    .attr('text-anchor', 'end')
+    .attr('dx', '-0.4em')
+    .attr('dy', '0.3em');
+
+  const areaGen = d3.area()
+    .x(d => x(d.data.year))
+    .y0(d => y(d[0]))
+    .y1(d => y(d[1]));
+
+  series.forEach(s => {
+    const c = s.key;
+    g.append('path')
+      .datum(s)
+      .attr('fill', confedColors[c])
+      .attr('fill-opacity', 0.88)
+      .attr('d', areaGen);
+  });
+
+  // invisible hover targets: one vertical strip per year showing all confeds at that year
+  const bisectW = innerW / years.length;
+  g.selectAll('rect.hover-strip')
+    .data(years)
+    .join('rect')
+    .attr('class', 'hover-strip')
+    .attr('x', yr => x(yr) - bisectW / 2)
+    .attr('y', 0)
+    .attr('width', bisectW)
+    .attr('height', innerH)
+    .attr('fill', 'transparent')
+    .style('cursor', 'pointer')
+    .on('mousemove', function(event, yr) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      const rows = confedShareData.filter(d => d.year === yr).sort((a, b) => b.pct - a.pct);
+      const lines = rows.map(r => `${r.confederation}: ${r.teams} teams (${r.pct}%)`).join('<br>');
+      tooltip.innerHTML = `<b>${yr}</b><br>${lines}`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+}
+
+renderConfedShare();
+window.addEventListener('resize', renderConfedShare);
+
+const STAGE_ORDER = [1,2,3,4,5,6,7];
+const STAGE_LABEL_SHORT = {1:'GS',2:'2GS',3:'R16',4:'QF',5:'SF',6:'F',7:'W'};
+const STAGE_LABEL_FULL = {1:'Group stage',2:'2nd group stage',3:'Round of 16',4:'Quarter-final',5:'Semi-final',6:'Final (runner-up)',7:'Champion'};
+const stageColorScale = d3.scaleQuantize().domain([1,7]).range(d3.schemeBlues[7]);
+function stageTextColor(rank) {
+  return rank >= 5 ? '#ffffff' : '#1a1a1a';
+}
+
+function renderStageHeatmap() {
+  const container = document.getElementById('stageHeatmap');
+  const tooltip = document.getElementById('stageHeatmapTooltip');
+  container.innerHTML = '';
+
+  const years = Array.from(new Set(stageHeatmapData.map(d => d.year))).sort((a, b) => a - b);
+  const rowsConfeds = confedOrder.filter(c => stageHeatmapData.some(d => d.confederation === c));
+
+  const margin = { top: 24, right: 16, bottom: 8, left: 90 };
+  const cellW = 34, cellH = 34;
+  const innerW = cellW * years.length;
+  const innerH = cellH * rowsConfeds.length;
+  const width = innerW + margin.left + margin.right;
+  const height = innerH + margin.top + margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scalePoint().domain(years).range([0, innerW]).padding(0.5);
+  const y = d3.scaleBand().domain(rowsConfeds).range([0, innerH]).padding(0.08);
+
+  const tickYears = years.filter((yr, i) => i % 2 === 0);
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisTop(x).tickValues(tickYears).tickFormat(d3.format('d')).tickSize(0))
+    .call(sel => sel.select('.domain').remove());
+
+  g.selectAll('text.rowlabel')
+    .data(rowsConfeds)
+    .join('text')
+    .attr('x', -10)
+    .attr('y', c => y(c) + y.bandwidth() / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', 'end')
+    .style('font-size', '12px').style('fill', '#333')
+    .text(c => c);
+
+  const cellData = [];
+  rowsConfeds.forEach(c => {
+    years.forEach(yr => {
+      const rec = stageHeatmapData.find(d => d.confederation === c && d.year === yr);
+      cellData.push({ confederation: c, year: yr, rec });
+    });
+  });
+
+  g.selectAll('rect.cell')
+    .data(cellData)
+    .join('rect')
+    .attr('x', d => x(d.year) - cellW / 2 + 1)
+    .attr('y', d => y(d.confederation))
+    .attr('width', cellW - 2)
+    .attr('height', y.bandwidth())
+    .attr('rx', 2)
+    .attr('fill', d => d.rec ? stageColorScale(d.rec.rank) : '#f0f0ee')
+    .style('cursor', d => d.rec ? 'pointer' : 'default')
+    .on('mousemove', function(event, d) {
+      if (!d.rec) return;
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      tooltip.innerHTML = `<b>${d.confederation} · ${d.year}</b><br>${STAGE_LABEL_FULL[d.rec.rank]}<br>${d.rec.team}`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+
+  g.selectAll('text.cell-label')
+    .data(cellData.filter(d => d.rec))
+    .join('text')
+    .attr('x', d => x(d.year))
+    .attr('y', d => y(d.confederation) + y.bandwidth() / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', 'middle')
+    .style('font-size', '10px').style('font-weight', '600')
+    .style('pointer-events', 'none')
+    .style('fill', d => stageTextColor(d.rec.rank))
+    .text(d => STAGE_LABEL_SHORT[d.rec.rank]);
+}
+
+renderStageHeatmap();
+window.addEventListener('resize', renderStageHeatmap);
+
+function renderHostDumbbell() {
+  const container = document.getElementById('hostDumbbell');
+  const tooltip = document.getElementById('hostDumbbellTooltip');
+  container.innerHTML = '';
+
+  const rows = hostAdvantageData.slice().sort((a, b) => a.host_year - b.host_year);
+
+  const width = 780;
+  const rowH = 26;
+  const margin = { top: 20, right: 24, bottom: 34, left: 130 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = rows.length * rowH;
+  const height = innerH + margin.top + margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([0.6, 7.4]).range([0, innerW]);
+  const y = d3.scaleBand().domain(rows.map(r => `${r.team} ${r.host_year}`)).range([0, innerH]).padding(0.3);
+
+  g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(d3.axisBottom(x).tickValues(STAGE_ORDER).tickFormat(r => STAGE_LABEL_SHORT[r]));
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).tickSize(0))
+    .call(sel => sel.select('.domain').remove())
+    .selectAll('text').style('font-size', '11.5px').style('fill', '#1a1a1a');
+
+  // gridlines
+  g.selectAll('line.vgrid')
+    .data(STAGE_ORDER)
+    .join('line')
+    .attr('class', 'vgrid')
+    .attr('x1', r => x(r)).attr('x2', r => x(r))
+    .attr('y1', 0).attr('y2', innerH)
+    .attr('stroke', '#ececea');
+
+  const row = g.selectAll('g.host-row').data(rows).join('g')
+    .attr('transform', r => `translate(0,${y(`${r.team} ${r.host_year}`) + y.bandwidth() / 2})`);
+
+  row.filter(r => r.away_avg_rank !== null).append('line')
+    .attr('x1', r => x(r.away_avg_rank)).attr('x2', r => x(r.host_rank))
+    .attr('y1', 0).attr('y2', 0)
+    .attr('stroke', '#ccc').attr('stroke-width', 2);
+
+  row.filter(r => r.away_avg_rank !== null).append('circle')
+    .attr('cx', r => x(r.away_avg_rank)).attr('cy', 0)
+    .attr('r', 5)
+    .attr('fill', '#999')
+    .style('cursor', 'pointer')
+    .on('mousemove', function(event, r) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      tooltip.innerHTML = `<b>${r.team}</b> · away average<br>${r.away_avg_rank.toFixed(2)} avg stage rank<br>over ${r.away_tournaments_count} tournaments`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+
+  row.append('circle')
+    .attr('cx', r => x(r.host_rank)).attr('cy', 0)
+    .attr('r', 5.5)
+    .attr('fill', '#d4af37')
+    .attr('stroke', '#a8842a')
+    .attr('stroke-width', 1)
+    .style('cursor', 'pointer')
+    .on('mousemove', function(event, r) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      tooltip.innerHTML = `<b>${r.team}</b> · hosting ${r.host_year}<br>${STAGE_LABEL_FULL[r.host_rank]}`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+
+  // simple legend
+  const legend = svg.append('g').attr('transform', `translate(${margin.left},${height - 14})`);
+  legend.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 5).attr('fill', '#d4af37').attr('stroke', '#a8842a');
+  legend.append('text').attr('x', 10).attr('y', 4).style('font-size', '11px').style('fill', '#666').text('While hosting');
+  legend.append('circle').attr('cx', 110).attr('cy', 0).attr('r', 5).attr('fill', '#999');
+  legend.append('text').attr('x', 120).attr('y', 4).style('font-size', '11px').style('fill', '#666').text('Away-tournament average');
+}
+
+renderHostDumbbell();
+window.addEventListener('resize', renderHostDumbbell);
+
+
+
+let pieDrillConfed = null;
+
+document.getElementById('pieBackBtn').addEventListener('click', () => {
+  pieDrillConfed = null;
+  renderWinnersPie();
+});
+
+function renderWinnersPie() {
+  const container = document.getElementById('winnersPie');
+  const tooltip = document.getElementById('winnersPieTooltip');
+  const legendDiv = document.getElementById('winnersLegend');
+  const backRow = document.getElementById('pieBackRow');
+  const drillTitleEl = document.getElementById('pieDrillTitle');
+  container.innerHTML = '';
+  legendDiv.innerHTML = '';
+
+  const size = 280;
+  const radius = size / 2 - 8;
+  const svg = d3.select(container).append('svg')
+    .attr('width', '100%')
+    .attr('viewBox', `0 0 ${size} ${size}`)
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  const g = svg.append('g').attr('transform', `translate(${size / 2},${size / 2})`);
+
+  const pie = d3.pie().sort(null).startAngle(0).endAngle(2 * Math.PI);
+  const arc = d3.arc().innerRadius(0).outerRadius(radius);
+  const labelArc = d3.arc().innerRadius(radius * 0.65).outerRadius(radius * 0.65);
+
+  if (pieDrillConfed) {
+    // ---- country-level drilldown pie ----
+    backRow.style.display = 'block';
+    drillTitleEl.textContent = confedFullName[pieDrillConfed];
+
+    const rows = countryTitlesData
+      .filter(d => d.confederation === pieDrillConfed)
+      .sort((a, b) => b.titles - a.titles);
+    const total = d3.sum(rows, d => d.titles);
+    const qualitativePalette = ['#4e79a7', '#f28e2b', '#e15759', '#59a14f', '#b07aa1', '#edc948', '#76b7b2', '#ff9da7', '#9c755f'];
+    const countryColor = d3.scaleOrdinal()
+      .domain(rows.map(d => d.country))
+      .range(qualitativePalette);
+
+    const arcs = pie.value(d => d.titles)(rows);
+
+    g.selectAll('path.pie-slice')
+      .data(arcs)
+      .join('path')
+      .attr('d', arc)
+      .attr('fill', d => countryColor(d.data.country))
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .on('mousemove', function(event, d) {
+        const rect = container.getBoundingClientRect();
+        const pct = 100 * d.data.titles / total;
+        tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+        tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+        tooltip.style.opacity = '1';
+        tooltip.innerHTML = `<b>${d.data.country}</b><br>${d.data.titles} title${d.data.titles === 1 ? '' : 's'}<br>${pct.toFixed(1)}% of ${confedFullName[pieDrillConfed]}'s titles`;
+      })
+      .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+
+    g.selectAll('text.pie-label')
+      .data(arcs)
+      .join('text')
+      .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '12px').style('font-weight', '600')
+      .style('fill', d => textColorFor(countryColor(d.data.country)))
+      .style('pointer-events', 'none')
+      .text(d => (100 * d.data.titles / total).toFixed(0) + '%');
+
+    rows.forEach(d => {
+      const pct = 100 * d.titles / total;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:13px;';
+      row.innerHTML = `<span style="width:12px; height:12px; border-radius:3px; background:${countryColor(d.country)}; flex-shrink:0;"></span>
+        <span style="flex:1;">${d.country}</span>
+        <span style="font-weight:600;">${pct.toFixed(1)}%</span>
+        <span style="color:#888; font-size:12px;">(${d.titles} title${d.titles === 1 ? '' : 's'})</span>`;
+      legendDiv.appendChild(row);
+    });
+    return;
+  }
+
+  // ---- top-level confederation pie ----
+  backRow.style.display = 'none';
+
+  const withZeros = confedOrder.map(c => {
+    const rec = winnersByConfedData.find(d => d.confederation === c);
+    return { confederation: c, titles: rec ? rec.titles : 0 };
+  });
+  const nonZero = withZeros.filter(d => d.titles > 0).sort((a, b) => b.titles - a.titles);
+  const grandTotal = d3.sum(withZeros, d => d.titles);
+  const hasCountryData = c => countryTitlesData.some(d => d.confederation === c);
+
+  const arcs = pie.value(d => d.titles)(nonZero);
+
+  g.selectAll('path.pie-slice')
+    .data(arcs)
+    .join('path')
+    .attr('d', arc)
+    .attr('fill', d => confedColors[d.data.confederation])
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 2)
+    .style('cursor', d => hasCountryData(d.data.confederation) ? 'pointer' : 'default')
+    .on('mousemove', function(event, d) {
+      const rect = container.getBoundingClientRect();
+      const pct = 100 * d.data.titles / grandTotal;
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
+      tooltip.style.opacity = '1';
+      const hint = hasCountryData(d.data.confederation) ? '<br><span style="color:#aaa;">click to see countries</span>' : '';
+      tooltip.innerHTML = `<b>${confedFullName[d.data.confederation]}</b><br>${d.data.titles} titles<br>${pct.toFixed(1)}% of all World Cups${hint}`;
+    })
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', (event, d) => {
+      if (hasCountryData(d.data.confederation)) {
+        pieDrillConfed = d.data.confederation;
+        renderWinnersPie();
+      }
+    });
+
+  g.selectAll('text.pie-label')
+    .data(arcs)
+    .join('text')
+    .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+    .attr('text-anchor', 'middle')
+    .style('font-size', '13px').style('font-weight', '600').style('fill', '#fff')
+    .style('pointer-events', 'none')
+    .text(d => (100 * d.data.titles / grandTotal).toFixed(1) + '%');
+
+  withZeros.forEach(d => {
+    const pct = 100 * d.titles / grandTotal;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:13px;' + (hasCountryData(d.confederation) ? ' cursor:pointer;' : '');
+    row.innerHTML = `<span style="width:12px; height:12px; border-radius:3px; background:${confedColors[d.confederation]}; flex-shrink:0;"></span>
+      <span style="flex:1;">${confedFullName[d.confederation]}</span>
+      <span style="font-weight:600;">${d.titles === 0 ? '0%' : pct.toFixed(1) + '%'}</span>
+      <span style="color:#888; font-size:12px;">(${d.titles} title${d.titles === 1 ? '' : 's'})</span>`;
+    if (hasCountryData(d.confederation)) {
+      row.addEventListener('click', () => { pieDrillConfed = d.confederation; renderWinnersPie(); });
+    }
+    legendDiv.appendChild(row);
+  });
+}
+
+renderWinnersPie();
+window.addEventListener('resize', renderWinnersPie);
+</script>
+</body>
+</html>
