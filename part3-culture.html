@@ -1,149 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>World Cup: Geopolitics and the Balance of Power</title>
+<title>גביע העולם: תרבות, אוהדים ומשמעת</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
   * { box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Heebo', -apple-system, "Segoe UI", Arial, sans-serif;
     margin: 0;
     background: #f7f7f5;
     color: #1a1a1a;
+    direction: rtl;
   }
-  .wrap {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
-  }
-  h1 {
-    font-size: 24px;
-    font-weight: 600;
-    margin: 0 0 6px;
-  }
-  .subtitle {
-    color: #666;
-    font-size: 14px;
-    margin: 0 0 36px;
-  }
-  section {
-    background: #ffffff;
-    border: 1px solid #e2e2df;
-    border-radius: 10px;
-    padding: 24px 28px 28px;
-    margin-bottom: 28px;
-  }
-  h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0 0 4px;
-  }
-  .desc {
-    color: #666;
-    font-size: 13px;
-    margin: 0 0 18px;
-    line-height: 1.5;
-  }
+  .wrap { max-width: 1600px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; }
+  .subtitle { color: #666; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #ffffff; border: 1px solid #e2e2df; border-radius: 10px; padding: 22px 24px 24px; }
+  h2 { font-size: 17px; font-weight: 700; margin: 0 0 6px; }
+  .desc { color: #555; font-size: 12.5px; margin: 0 0 8px; line-height: 1.6; }
+  .howto { background: #f4f7fb; border-radius: 6px; padding: 8px 12px; font-size: 11.5px; color: #3a5a7a; margin: 0 0 14px; line-height: 1.6; }
   .tooltip {
-    position: absolute;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .1s;
-    background: #1a1a1a;
-    color: #fff;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 12px;
-    line-height: 1.5;
-    z-index: 20;
-    white-space: nowrap;
+    position: absolute; pointer-events: none; opacity: 0; transition: opacity .1s;
+    background: #1a1a1a; color: #fff; border-radius: 6px; padding: 8px 10px;
+    font-size: 12px; line-height: 1.6; z-index: 20; white-space: nowrap; direction: rtl;
   }
   .chart-container { position: relative; }
+  .chart-container svg { direction: ltr; }
   .axis text { fill: #888; font-size: 11px; }
   .axis path, .axis line { stroke: #ddd; }
-  .hint { font-size: 11.5px; color: #999; margin-top: 10px; }
-  .legend-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin-bottom: 16px;
-    font-size: 12px;
-    color: #666;
-  }
-  .legend-row span.item { display: flex; align-items: center; gap: 5px; }
-  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+  .hint { font-size: 11px; color: #999; margin-top: 10px; line-height: 1.6; }
+  .back-link { color: #1f77b4; text-decoration: none; font-size: 13px; }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-  <p style="margin:0 0 18px;"><a href="index.html" style="color:#1f77b4; text-decoration:none; font-size:13px;">&larr; Back to overview</a></p>
-  <h1>Part 3 — Football culture, crowds, and discipline</h1>
-  <p class="subtitle">The external context: who shows up to watch, how aggressively the game is officiated, and who actually gets picked to manage a winner.</p>
+  <p style="margin:0 0 18px;"><a href="index.html" class="back-link">&larr; חזרה לעמוד הראשי</a></p>
+  <h1>תרבות, אוהדים ומשמעת</h1>
+  <p class="subtitle">ההקשר החיצוני: מי מגיע לצפות, עד כמה אגרסיבי השיפוט במגרש, ומי בעצם נבחר לנהל נבחרת מנצחת.</p>
 
-<section id="attendance-section">
-    <h2>Viz 9 — The stadium boom</h2>
-    <p class="desc">Average match attendance across every World Cup. The USA 1994 spike still stands as the highest-attended World Cup ever — a product of hosting matches inside enormous American football stadiums built for a completely different sport.</p>
-    <div class="chart-container">
-      <div id="attendanceChart"></div>
-      <div class="tooltip" id="attendanceTooltip"></div>
-    </div>
-    <p class="hint">Stadium capacity data exists in this source but isn't cleanly linkable to individual match attendance figures (the attendance records use free-text stadium names rather than a shared ID), so this tracks raw average attendance rather than a stadium-fill percentage.</p>
-  </section>
+  <div class="grid">
 
-<section id="cards-trend-section">
-    <h2>Viz 10 — The aggression index</h2>
-    <p class="desc">Total yellow and red cards per match, by tournament. Cards weren't tracked before 1970 — the card system itself was invented for that World Cup. 2006 stands as the most heavily-carded tournament ever, the same edition as Portugal vs Netherlands' infamous four-red-card "Battle of Nuremberg."</p>
-    <div class="chart-container">
-      <div id="cardsChart"></div>
-      <div class="tooltip" id="cardsTooltip"></div>
+    <div class="card" id="attendance-section">
+      <h2>גאות הצפייה באצטדיונים</h2>
+      <p class="desc">ממוצע נוכחות למשחק, בכל מונדיאל. ציר X — שנת הטורניר. ציר Y — ממוצע צופים למשחק. השיא של ארה"ב 1994 עדיין עומד כמונדיאל עם הצפייה הגבוהה ביותר בהיסטוריה — תוצאה של אירוח משחקים בתוך אצטדיוני פוטבול אמריקאי ענקיים, שנבנו לספורט אחר לגמרי.</p>
+      <p class="howto">איך להשתמש: עברו עם העכבר מעל כל נקודה לפרטים המדויקים.</p>
+      <div class="chart-container">
+        <div id="attendanceChart"></div>
+        <div class="tooltip" id="attendanceTooltip"></div>
+      </div>
+      <p class="hint">נתוני קיבולת אצטדיונים קיימים במקור אך לא ניתנים לקישור נקי לנתוני נוכחות של משחק בודד (רישומי הנוכחות משתמשים בשמות טקסטואליים חופשיים של אצטדיונים ולא במזהה משותף), ולכן זה עוקב אחרי ממוצע נוכחות גולמי ולא אחוז תפוסה.</p>
     </div>
-  </section>
 
-<section id="managers-section">
-    <h2>Viz 11 — Native manager or foreign import?</h2>
-    <p class="desc">Average furthest stage reached, comparing teams managed by one of their own nationals against teams managed by a foreigner. Click either bar to break it down by how many prior World Cups that manager had already worked.</p>
-    <div id="managerBackRow" style="display:none; margin-bottom:10px;">
-      <span id="managerBackBtn" style="font-size:12px; color:#666; cursor:pointer; border:1px solid #ccc; border-radius:6px; padding:4px 10px; background:#fff;">← Back</span>
-      <span id="managerDrillTitle" style="font-size:13px; font-weight:600; margin-left:10px;"></span>
+    <div class="card" id="cards-trend-section">
+      <h2>מדד האגרסיביות</h2>
+      <p class="desc">סך כרטיסים צהובים ואדומים למשחק, לפי טורניר. ציר X — שנת הטורניר. ציר Y — כרטיסים למשחק. כרטיסים לא נספרו לפני 1970 — שיטת הכרטיסים עצמה הומצאה עבור אותו מונדיאל. 2006 עומד כטורניר עם הכי הרבה כרטיסים בהיסטוריה, אותה מהדורה שבה פורטוגל מול הולנד קיימו את "קרב נירנברג" המפורסם עם ארבעה כרטיסים אדומים.</p>
+      <p class="howto">איך להשתמש: עברו עם העכבר מעל כל נקודה לפרטים המדויקים.</p>
+      <div class="chart-container">
+        <div id="cardsChart"></div>
+        <div class="tooltip" id="cardsTooltip"></div>
+      </div>
     </div>
-    <div class="chart-container">
-      <div id="managersChart"></div>
-      <div class="tooltip" id="managersTooltip"></div>
-    </div>
-    <p class="hint">This dataset has no manager birthdate, so age can't be analyzed — only nationality and prior tournament experience. "Furthest stage" uses the same group stage (1) through final (6) / champion (7) scale as the rest of this project.</p>
-  </section>
 
-<section id="manager-ages-section">
-    <h2>Viz 12 — How old are winning managers?</h2>
-    <p class="desc">Age of the manager at the time they won the World Cup, for all 22 title-winning instances. Since this dataset itself doesn't include manager birthdates, these ages were researched individually from each manager's public biography rather than pulled from the source data directly.</p>
-    <div class="chart-container">
-      <div id="managerAgesChart"></div>
-      <div class="tooltip" id="managerAgesTooltip"></div>
+    <div class="card" id="managers-section">
+      <h2>מאמן מקומי או ייבוא זר?</h2>
+      <p class="desc">השלב הרחוק הממוצע שאליו הגיעו נבחרות, בהשוואה בין נבחרות שניהל אותן מאמן מבן ארצן לבין נבחרות שניהל אותן מאמן זר. ציר X — השלב הממוצע (בסולם המדורג: 1 = שלב הבתים, 2 = שלב בתים שני, 3 = שמינית גמר, 4 = רבע גמר, 5 = חצי גמר, 6 = גמר, 7 = אלופה). ציר Y — סוג המאמן.</p>
+      <p class="howto">איך להשתמש: לחצו על כל אחת מהעמודות כדי לפלח אותה לפי כמה מונדיאלים קודמים אותו מאמן כבר ניהל.</p>
+      <div id="managerBackRow" style="display:none; margin-bottom:10px;">
+        <span id="managerBackBtn" style="font-size:12px; color:#666; cursor:pointer; border:1px solid #ccc; border-radius:6px; padding:4px 10px; background:#fff;">→ חזרה</span>
+        <span id="managerDrillTitle" style="font-size:13px; font-weight:600; margin-right:10px;"></span>
+      </div>
+      <div class="chart-container">
+        <div id="managersChart"></div>
+        <div class="tooltip" id="managersTooltip"></div>
+      </div>
+      <p class="hint">למאגר הנתונים הזה אין תאריך לידה של מאמנים, כך שלא ניתן לנתח גיל — רק אזרחות וניסיון קודם בטורניר. "השלב הרחוק ביותר" משתמש באותו סולם כמו שאר הפרויקט: 1 = שלב הבתים, 2 = שלב בתים שני, 3 = שמינית גמר, 4 = רבע גמר, 5 = חצי גמר, 6 = גמר, 7 = אלופה.</p>
     </div>
-    <p class="hint">Alberto Suppici remains the youngest ever at 31 (Uruguay, 1930); Vicente del Bosque the oldest at 59 (Spain, 2010). Ages are approximate to within about a year in a few early cases where an exact birth date was harder to confirm.</p>
-  </section>
 
-  <p class="hint">Attendance and discipline data derive from the Fjelstul World Cup database and its derived summary tables. Manager ages were researched individually from public biographical sources, since this dataset has no manager birthdate field.</p>
+    <div class="card" id="manager-ages-section">
+      <h2>באיזה גיל מנצחים מאמנים?</h2>
+      <p class="desc">גיל המאמן בזמן שזכה במונדיאל, עבור כל 22 מקרי הזכייה. ציר X — טווח גילאים. ציר Y — כמות מאמנים. מכיוון שלמאגר הנתונים אין תאריכי לידה של מאמנים, הגילאים הללו נאספו ידנית מהביוגרפיה הפומבית של כל מאמן בנפרד, ולא נלקחו ישירות מהמאגר.</p>
+      <p class="howto">איך להשתמש: עברו עם העכבר מעל כל עמודה לרשימת המאמנים באותו טווח גילאים.</p>
+      <div class="chart-container">
+        <div id="managerAgesChart"></div>
+        <div class="tooltip" id="managerAgesTooltip"></div>
+      </div>
+      <p class="hint">אלברטו סופיסי הצעיר ביותר אי-פעם בגיל 31 (אורוגוואי, 1930); ויסנטה דל בוסקה המבוגר ביותר בגיל 59 (ספרד, 2010). הגילאים מדויקים לכשנה במספר מקרים מוקדמים שבהם תאריך לידה מדויק היה קשה יותר לאמת.</p>
+    </div>
+
+  </div>
+
+  <p class="hint" style="margin-top:24px;">נתוני הנוכחות והמשמעת מבוססים על מאגר Fjelstul World Cup וטבלאות הסיכום הנגזרות ממנו. גילאי המאמנים נאספו ידנית ממקורות ביוגרפיים פומביים, מכיוון שלמאגר הזה אין שדה תאריך לידה למאמנים.</p>
 </div>
 
 <script>
 const attendanceData = [{"year": 1930, "matches": 18, "total_attendance": 590549, "avg_attendance": 32808}, {"year": 1934, "matches": 17, "total_attendance": 363000, "avg_attendance": 21353}, {"year": 1938, "matches": 18, "total_attendance": 375700, "avg_attendance": 20872}, {"year": 1950, "matches": 22, "total_attendance": 1045246, "avg_attendance": 47511}, {"year": 1954, "matches": 26, "total_attendance": 768607, "avg_attendance": 29562}, {"year": 1958, "matches": 35, "total_attendance": 819810, "avg_attendance": 23423}, {"year": 1962, "matches": 32, "total_attendance": 893172, "avg_attendance": 27912}, {"year": 1966, "matches": 32, "total_attendance": 1563135, "avg_attendance": 48848}, {"year": 1970, "matches": 32, "total_attendance": 1603975, "avg_attendance": 50124}, {"year": 1974, "matches": 38, "total_attendance": 1865753, "avg_attendance": 49099}, {"year": 1978, "matches": 38, "total_attendance": 1545791, "avg_attendance": 40679}, {"year": 1982, "matches": 52, "total_attendance": 2109723, "avg_attendance": 40572}, {"year": 1986, "matches": 52, "total_attendance": 2394031, "avg_attendance": 46039}, {"year": 1990, "matches": 52, "total_attendance": 2516215, "avg_attendance": 48389}, {"year": 1994, "matches": 52, "total_attendance": 3587538, "avg_attendance": 68991}, {"year": 1998, "matches": 64, "total_attendance": 2785100, "avg_attendance": 43517}, {"year": 2002, "matches": 64, "total_attendance": 2705197, "avg_attendance": 42269}, {"year": 2006, "matches": 64, "total_attendance": 3359439, "avg_attendance": 52491}, {"year": 2010, "matches": 64, "total_attendance": 3178856, "avg_attendance": 49670}, {"year": 2014, "matches": 64, "total_attendance": 3429873, "avg_attendance": 53592}, {"year": 2018, "matches": 64, "total_attendance": 3031768, "avg_attendance": 47371}, {"year": 2022, "matches": 64, "total_attendance": 3404252, "avg_attendance": 53191}];
 const cardsData = [{"year": 1970, "matches": 32, "total_cards": 52, "cards_per_match": 1.62}, {"year": 1974, "matches": 38, "total_cards": 92, "cards_per_match": 2.42}, {"year": 1978, "matches": 38, "total_cards": 49, "cards_per_match": 1.29}, {"year": 1982, "matches": 52, "total_cards": 104, "cards_per_match": 2.0}, {"year": 1986, "matches": 52, "total_cards": 142, "cards_per_match": 2.73}, {"year": 1990, "matches": 52, "total_cards": 179, "cards_per_match": 3.44}, {"year": 1994, "matches": 52, "total_cards": 236, "cards_per_match": 4.54}, {"year": 1998, "matches": 64, "total_cards": 272, "cards_per_match": 4.25}, {"year": 2002, "matches": 64, "total_cards": 277, "cards_per_match": 4.33}, {"year": 2006, "matches": 64, "total_cards": 335, "cards_per_match": 5.23}, {"year": 2010, "matches": 64, "total_cards": 263, "cards_per_match": 4.11}, {"year": 2014, "matches": 64, "total_cards": 191, "cards_per_match": 2.98}, {"year": 2018, "matches": 64, "total_cards": 223, "cards_per_match": 3.48}, {"year": 2022, "matches": 64, "total_cards": 225, "cards_per_match": 3.52}];
 const managersSummary = {"top": {"foreign": {"avg_rank": 2.109, "count": 137}, "native": {"avg_rank": 2.92, "count": 364}}, "drill": {"foreign|0": {"avg_rank": 2.169, "count": 89}, "native|0": {"avg_rank": 2.767, "count": 287}, "native|1": {"avg_rank": 3.357, "count": 56}, "foreign|1": {"avg_rank": 2.25, "count": 32}, "native|2+": {"avg_rank": 3.857, "count": 21}, "foreign|2+": {"avg_rank": 1.5, "count": 16}}};
-const managerAgesData = [{"manager": "Alberto Suppici", "team": "Uruguay", "year": 1930, "age": 31}, {"manager": "Vittorio Pozzo", "team": "Italy", "year": 1934, "age": 48}, {"manager": "Vittorio Pozzo", "team": "Italy", "year": 1938, "age": 52}, {"manager": "Juan López", "team": "Uruguay", "year": 1950, "age": 42}, {"manager": "Sepp Herberger", "team": "Germany", "year": 1954, "age": 57}, {"manager": "Vicente Feola", "team": "Brazil", "year": 1958, "age": 48}, {"manager": "Aymoré Moreira", "team": "Brazil", "year": 1962, "age": 50}, {"manager": "Alf Ramsey", "team": "England", "year": 1966, "age": 46}, {"manager": "Mário Zagallo", "team": "Brazil", "year": 1970, "age": 38}, {"manager": "Helmut Schön", "team": "Germany", "year": 1974, "age": 58}, {"manager": "César Luis Menotti", "team": "Argentina", "year": 1978, "age": 39}, {"manager": "Enzo Bearzot", "team": "Italy", "year": 1982, "age": 54}, {"manager": "Carlos Bilardo", "team": "Argentina", "year": 1986, "age": 48}, {"manager": "Franz Beckenbauer", "team": "Germany", "year": 1990, "age": 44}, {"manager": "Carlos Alberto Parreira", "team": "Brazil", "year": 1994, "age": 51}, {"manager": "Aimé Jacquet", "team": "France", "year": 1998, "age": 56}, {"manager": "Luiz Felipe Scolari", "team": "Brazil", "year": 2002, "age": 53}, {"manager": "Marcello Lippi", "team": "Italy", "year": 2006, "age": 58}, {"manager": "Vicente del Bosque", "team": "Spain", "year": 2010, "age": 59}, {"manager": "Joachim Löw", "team": "Germany", "year": 2014, "age": 54}, {"manager": "Didier Deschamps", "team": "France", "year": 2018, "age": 49}, {"manager": "Lionel Scaloni", "team": "Argentina", "year": 2022, "age": 44}];
-
-
+const managerAgesData = [{"manager": "אלברטו סופיסי", "team": "אורוגוואי", "year": 1930, "age": 31}, {"manager": "ויטוריו פוצו", "team": "איטליה", "year": 1934, "age": 48}, {"manager": "ויטוריו פוצו", "team": "איטליה", "year": 1938, "age": 52}, {"manager": "חואן לופס", "team": "אורוגוואי", "year": 1950, "age": 42}, {"manager": "זפ הרברגר", "team": "גרמניה", "year": 1954, "age": 57}, {"manager": "ויסנטה פאולה", "team": "ברזיל", "year": 1958, "age": 48}, {"manager": "איימורה מוריירה", "team": "ברזיל", "year": 1962, "age": 50}, {"manager": "אלף רמזי", "team": "אנגליה", "year": 1966, "age": 46}, {"manager": "מריו זגאלו", "team": "ברזיל", "year": 1970, "age": 38}, {"manager": "הלמוט שן", "team": "גרמניה", "year": 1974, "age": 58}, {"manager": "סזאר לואיס מנוטי", "team": "ארגנטינה", "year": 1978, "age": 39}, {"manager": "אנצו בארצוט", "team": "איטליה", "year": 1982, "age": 54}, {"manager": "קרלוס בילארדו", "team": "ארגנטינה", "year": 1986, "age": 48}, {"manager": "פרנץ בקנבאואר", "team": "גרמניה", "year": 1990, "age": 44}, {"manager": "קרלוס אלברטו פריירה", "team": "ברזיל", "year": 1994, "age": 51}, {"manager": "אימה ז'אקה", "team": "צרפת", "year": 1998, "age": 56}, {"manager": "לואיז פליפה סקולארי", "team": "ברזיל", "year": 2002, "age": 53}, {"manager": "מרצ'לו ליפי", "team": "איטליה", "year": 2006, "age": 58}, {"manager": "ויסנטה דל בוסקה", "team": "ספרד", "year": 2010, "age": 59}, {"manager": "יואכים לב", "team": "גרמניה", "year": 2014, "age": 54}, {"manager": "דידייה דשאן", "team": "צרפת", "year": 2018, "age": 49}, {"manager": "ליונל סקלוני", "team": "ארגנטינה", "year": 2022, "age": 44}];
 
 function renderAttendance() {
   const container = document.getElementById('attendanceChart');
   const tooltip = document.getElementById('attendanceTooltip');
   container.innerHTML = '';
 
-  const width = 900, height = 340;
-  const margin = { top: 16, right: 20, bottom: 54, left: 60 };
+  const width = 700, height = 360;
+  const margin = { top: 16, right: 20, bottom: 54, left: 56 };
   const innerW = width - margin.left - margin.right;
   const innerH = height - margin.top - margin.bottom;
 
@@ -173,9 +142,9 @@ function renderAttendance() {
     .attr('dy', '0.3em');
 
   g.append('text').attr('transform', 'rotate(-90)')
-    .attr('x', -innerH / 2).attr('y', -46)
-    .attr('text-anchor', 'middle').style('font-size', '12px').style('fill', '#666')
-    .text('Average attendance per match');
+    .attr('x', -innerH / 2).attr('y', -42)
+    .attr('text-anchor', 'middle').style('font-size', '11.5px').style('fill', '#666')
+    .text('ממוצע נוכחות למשחק');
 
   const area = d3.area()
     .x(d => x(d.year))
@@ -210,7 +179,7 @@ function renderAttendance() {
       tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
       tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
       tooltip.style.opacity = '1';
-      tooltip.innerHTML = `<b>${d.year}</b><br>${d.avg_attendance.toLocaleString()} avg attendance<br>${d.total_attendance.toLocaleString()} total over ${d.matches} matches`;
+      tooltip.innerHTML = `<b>${d.year}</b><br>${d.avg_attendance.toLocaleString()} ממוצע נוכחות<br>${d.total_attendance.toLocaleString()} סה"כ על פני ${d.matches} משחקים`;
     })
     .on('mouseleave', () => { tooltip.style.opacity = '0'; });
 }
@@ -223,8 +192,8 @@ function renderCards() {
   const tooltip = document.getElementById('cardsTooltip');
   container.innerHTML = '';
 
-  const width = 780, height = 320;
-  const margin = { top: 16, right: 20, bottom: 40, left: 46 };
+  const width = 700, height = 360;
+  const margin = { top: 16, right: 20, bottom: 40, left: 42 };
   const innerW = width - margin.left - margin.right;
   const innerH = height - margin.top - margin.bottom;
 
@@ -249,9 +218,9 @@ function renderCards() {
     .call(d3.axisBottom(x).tickFormat(d3.format('d')));
 
   g.append('text').attr('transform', 'rotate(-90)')
-    .attr('x', -innerH / 2).attr('y', -36)
-    .attr('text-anchor', 'middle').style('font-size', '12px').style('fill', '#666')
-    .text('Cards per match');
+    .attr('x', -innerH / 2).attr('y', -32)
+    .attr('text-anchor', 'middle').style('font-size', '11.5px').style('fill', '#666')
+    .text('כרטיסים למשחק');
 
   const line = d3.line().x(d => x(d.year)).y(d => y(d.cards_per_match));
   g.append('path')
@@ -276,7 +245,7 @@ function renderCards() {
       tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
       tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
       tooltip.style.opacity = '1';
-      tooltip.innerHTML = `<b>${d.year}</b><br>${d.cards_per_match} cards/match<br>${d.total_cards} total over ${d.matches} matches`;
+      tooltip.innerHTML = `<b>${d.year}</b><br>${d.cards_per_match} כרטיסים/משחק<br>${d.total_cards} סה"כ על פני ${d.matches} משחקים`;
     })
     .on('mouseleave', () => { tooltip.style.opacity = '0'; });
 }
@@ -284,7 +253,7 @@ function renderCards() {
 renderCards();
 window.addEventListener('resize', renderCards);
 
-const CURSE_RANK_LABEL = {0:'Did not qualify',1:'Group stage',2:'2nd group stage',3:'Round of 16',4:'Quarter-final',5:'Semi-final',6:'Final',7:'Champions again'};
+const CURSE_RANK_LABEL = {0:'לא עלתה',1:'שלב הבתים',2:'שלב בתים שני',3:'שמינית גמר',4:'רבע גמר',5:'חצי גמר',6:'גמר',7:'אלופה שוב'};
 
 let managerDrill = null;
 
@@ -301,14 +270,14 @@ function renderManagers() {
   container.innerHTML = '';
 
   const width = 700;
-  const rowH = 46;
-  const margin = { top: 10, right: 70, bottom: 34, left: 150 };
-  const tierLabel = {'0': 'No prior World Cup', '1': '1 prior World Cup', '2+': '2+ prior World Cups'};
+  const rowH = 44;
+  const margin = { top: 10, right: 60, bottom: 34, left: 130 };
+  const tierLabel = {'0': 'ללא מונדיאל קודם', '1': 'מונדיאל קודם אחד', '2+': '2+ מונדיאלים קודמים'};
 
   let rows;
   if (managerDrill) {
     backRow.style.display = 'block';
-    drillTitleEl.textContent = managerDrill === 'native' ? 'Native managers, by prior experience' : 'Foreign managers, by prior experience';
+    drillTitleEl.textContent = managerDrill === 'native' ? 'מאמנים מקומיים, לפי ניסיון קודם' : 'מאמנים זרים, לפי ניסיון קודם';
     rows = ['0', '1', '2+'].map(tier => {
       const rec = managersSummary.drill[`${managerDrill}|${tier}`];
       return { label: tierLabel[tier], avg_rank: rec.avg_rank, count: rec.count };
@@ -316,8 +285,8 @@ function renderManagers() {
   } else {
     backRow.style.display = 'none';
     rows = [
-      { label: 'Native manager', key: 'native', avg_rank: managersSummary.top.native.avg_rank, count: managersSummary.top.native.count },
-      { label: 'Foreign manager', key: 'foreign', avg_rank: managersSummary.top.foreign.avg_rank, count: managersSummary.top.foreign.count }
+      { label: 'מאמן מקומי', key: 'native', avg_rank: managersSummary.top.native.avg_rank, count: managersSummary.top.native.count },
+      { label: 'מאמן זר', key: 'foreign', avg_rank: managersSummary.top.foreign.avg_rank, count: managersSummary.top.foreign.count }
     ];
   }
 
@@ -341,7 +310,7 @@ function renderManagers() {
   g.append('g').attr('class', 'axis')
     .call(d3.axisLeft(y).tickSize(0))
     .call(sel => sel.select('.domain').remove())
-    .selectAll('text').style('font-size', '12.5px').style('fill', '#1a1a1a');
+    .selectAll('text').style('font-size', '12px').style('fill', '#1a1a1a');
 
   const row = g.selectAll('g.mgr-row').data(rows).join('g')
     .attr('transform', d => `translate(0,${y(d.label)})`);
@@ -358,8 +327,8 @@ function renderManagers() {
       tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
       tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
       tooltip.style.opacity = '1';
-      const hint = d.key ? '<br><span style="color:#aaa;">click to break down by experience</span>' : '';
-      tooltip.innerHTML = `<b>${d.label}</b><br>avg furthest stage: ${d.avg_rank.toFixed(2)}<br>${d.count} appointments${hint}`;
+      const hint = d.key ? '<br><span style="color:#aaa;">לחצו לפילוח לפי ניסיון</span>' : '';
+      tooltip.innerHTML = `<b>${d.label}</b><br>שלב רחוק ממוצע: ${d.avg_rank.toFixed(2)}<br>${d.count} מינויים${hint}`;
     })
     .on('mouseleave', () => { tooltip.style.opacity = '0'; })
     .on('click', (event, d) => { if (d.key) { managerDrill = d.key; renderManagers(); } })
@@ -369,7 +338,7 @@ function renderManagers() {
   row.append('text')
     .attr('x', d => x(d.avg_rank) + 8).attr('y', y.bandwidth() / 2)
     .attr('dy', '0.35em')
-    .style('font-size', '12.5px').style('fill', '#444').style('font-weight', '600')
+    .style('font-size', '12px').style('fill', '#444').style('font-weight', '600')
     .text(d => d.avg_rank.toFixed(2));
 }
 
@@ -392,8 +361,8 @@ function renderManagerAges() {
     if (bin) bin.items.push(d);
   });
 
-  const width = 700, height = 320;
-  const margin = { top: 16, right: 20, bottom: 40, left: 46 };
+  const width = 700, height = 360;
+  const margin = { top: 16, right: 20, bottom: 40, left: 42 };
   const innerW = width - margin.left - margin.right;
   const innerH = height - margin.top - margin.bottom;
 
@@ -418,11 +387,11 @@ function renderManagerAges() {
 
   g.append('text').attr('transform', 'rotate(-90)')
     .attr('x', -innerH / 2).attr('y', -32)
-    .attr('text-anchor', 'middle').style('font-size', '12px').style('fill', '#666')
-    .text('Winning managers');
+    .attr('text-anchor', 'middle').style('font-size', '11.5px').style('fill', '#666')
+    .text('מאמנים זוכים');
   g.append('text').attr('x', innerW / 2).attr('y', innerH + 34)
-    .attr('text-anchor', 'middle').style('font-size', '12px').style('fill', '#666')
-    .text('Age at the time of winning');
+    .attr('text-anchor', 'middle').style('font-size', '11.5px').style('fill', '#666')
+    .text('גיל בזמן הזכייה');
 
   g.selectAll('rect.age-bar')
     .data(bins)
@@ -441,7 +410,7 @@ function renderManagerAges() {
       tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
       tooltip.style.top = (event.clientY - rect.top - 8) + 'px';
       tooltip.style.opacity = '1';
-      const names = b.items.map(d => `${d.manager} (${d.team} ${d.year}, age ${d.age})`).join('<br>');
+      const names = b.items.map(d => `${d.manager} (${d.team} ${d.year}, גיל ${d.age})`).join('<br>');
       tooltip.innerHTML = `<b>${b.start}–${b.end - 1}</b><br>${names}`;
     })
     .on('mouseleave', () => { tooltip.style.opacity = '0'; })
