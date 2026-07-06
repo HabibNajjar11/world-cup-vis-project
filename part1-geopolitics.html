@@ -150,6 +150,7 @@
       <h2>האם אירוח באמת עוזר?</h2>
       <p class="desc">לכל מדינה מארחת: השלב הרחוק ביותר אליו הגיעה בזמן שאירחה (נקודה זהובה) מול השלב הרחוק הממוצע שאליו הגיעה בכל שאר הופעותיה במונדיאל (נקודה אפורה). ציר X — השלב שהושג, בסולם מדורג משלב הבתים ועד אלופה (1 = שלב הבתים, 2 = שלב בתים שני, 3 = שמינית גמר, 4 = רבע גמר, 5 = חצי גמר, 6 = גמר, 7 = אלופה). ציר Y — כל שורה היא מדינה מארחת אחת. נקודה זהובה שיושבת הרבה מימין לשותפתה האפורה אומרת שקהל הבית אכן מתאם עם שיפור אמיתי בביצועים.</p>
       <p class="howto">איך להשתמש: עברו עם העכבר מעל כל נקודה לפרטים המדויקים.</p>
+      <p class="hint" style="margin-bottom:6px;">הערה: "שלב בתים שני" (2) היה פורמט מיוחד ב-1974, 1978 ו-1982 — סבב בתים נוסף במקום שמינית גמר ישירה. ספרד 1982 מוצגת בשלב הזה.</p>
       <div class="chart-container">
         <div id="hostDumbbell"></div>
         <div class="tooltip" id="hostDumbbellTooltip"></div>
@@ -159,10 +160,11 @@
 
     <div class="card" id="stage-heatmap-section">
       <h2>תקרת הזכוכית של שלבי הנוקאאוט</h2>
-      <p class="desc">השלב הרחוק ביותר שאליו הגיעה כל נבחרת מכל קונפדרציה, בכל מונדיאל. ציר X — שנת הטורניר. ציר Y — הקונפדרציה. צבע כהה יותר = הגעה עמוקה יותר בטורניר, לפי סולם של 1–7 (1 = שלב הבתים, 2 = שלב בתים שני, 3 = שמינית גמר, 4 = רבע גמר, 5 = חצי גמר, 6 = גמר, 7 = אלופה). זה המבחן הברור ביותר לשאלה האם אפריקה ואסיה באמת סוגרות את הפער מול אירופה ודרום אמריקה, או שתקרת זכוכית מבנית עדיין קיימת.</p>
+      <p class="desc">השלב הרחוק ביותר שאליו הגיעה כל נבחרת מכל קונפדרציה, בכל מונדיאל. ציר X — הקונפדרציה. ציר Y — שנת הטורניר (מלמעלה למטה, כרונולוגית). צבע כהה יותר = הגעה עמוקה יותר בטורניר, לפי סולם של 1–7 (1 = שלב הבתים, 2 = שלב בתים שני, 3 = שמינית גמר, 4 = רבע גמר, 5 = חצי גמר, 6 = גמר, 7 = אלופה). זה המבחן הברור ביותר לשאלה האם אפריקה ואסיה באמת סוגרות את הפער מול אירופה ודרום אמריקה, או שתקרת זכוכית מבנית עדיין קיימת.</p>
       <p class="howto">איך להשתמש: עברו עם העכבר מעל כל תא כדי לראות באיזו שנה, איזו נבחרת ספציפית הגיעה לאותו שלב.</p>
+      <p class="hint">הערה: "שלב בתים שני" (2) היה פורמט מיוחד שנהג ב-1974, 1978 ו-1982 — הקבוצות שעברו את שלב הבתים הראשון חולקו לסבב בתים נוסף, במקום מעבר ישיר לשמינית גמר. בטבלה כאן זה מופיע רק פעם אחת: ארגנטינה (CONMEBOL), 1982.</p>
       <div class="chart-container">
-        <div id="stageHeatmap" style="overflow-x:auto;"></div>
+        <div id="stageHeatmap"></div>
         <div class="tooltip" id="stageHeatmapTooltip"></div>
       </div>
       <div class="legend-row" id="stageLegend" style="margin-top:12px; margin-bottom:0;"></div>
@@ -324,42 +326,42 @@ function renderStageHeatmap() {
   container.innerHTML = '';
 
   const years = Array.from(new Set(stageHeatmapData.map(d => d.year))).sort((a, b) => a - b);
-  const rowsConfeds = confedOrder.filter(c => stageHeatmapData.some(d => d.confederation === c));
+  const colsConfeds = confedOrder.filter(c => stageHeatmapData.some(d => d.confederation === c));
 
-  const margin = { top: 26, right: 16, bottom: 8, left: 100 };
-  const cellW = 34, cellH = 34;
-  const innerW = cellW * years.length;
-  const innerH = cellH * rowsConfeds.length;
+  const margin = { top: 20, right: 16, bottom: 8, left: 48 };
+  const cellW = 78, cellH = 20;
+  const innerW = cellW * colsConfeds.length;
+  const innerH = cellH * years.length;
   const width = innerW + margin.left + margin.right;
   const height = innerH + margin.top + margin.bottom;
 
   const svg = d3.select(container).append('svg')
-    .attr('width', width)
-    .attr('height', height)
+    .attr('width', '100%')
     .attr('viewBox', `0 0 ${width} ${height}`)
     .attr('preserveAspectRatio', 'xMinYMin meet');
   const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-  const x = d3.scalePoint().domain(years).range([0, innerW]).padding(0.5);
-  const y = d3.scaleBand().domain(rowsConfeds).range([0, innerH]).padding(0.08);
+  const x = d3.scaleBand().domain(colsConfeds).range([0, innerW]).padding(0.1);
+  const y = d3.scalePoint().domain(years).range([0, innerH]).padding(0.5);
+
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisTop(x).tickSize(0))
+    .call(sel => sel.select('.domain').remove())
+    .selectAll('text').style('font-size', '11.5px').style('font-weight', '600');
 
   const tickYears = years.filter((yr, i) => i % 2 === 0);
-  g.append('g').attr('class', 'axis')
-    .call(d3.axisTop(x).tickValues(tickYears).tickFormat(d3.format('d')).tickSize(0))
-    .call(sel => sel.select('.domain').remove());
-
   g.selectAll('text.rowlabel')
-    .data(rowsConfeds)
+    .data(tickYears)
     .join('text')
-    .attr('x', -10)
-    .attr('y', c => y(c) + y.bandwidth() / 2)
+    .attr('x', -8)
+    .attr('y', yr => y(yr))
     .attr('dy', '0.35em')
     .attr('text-anchor', 'end')
-    .style('font-size', '12.5px').style('fill', '#333')
-    .text(c => c);
+    .style('font-size', '10px').style('fill', '#333')
+    .text(yr => yr);
 
   const cellData = [];
-  rowsConfeds.forEach(c => {
+  colsConfeds.forEach(c => {
     years.forEach(yr => {
       const rec = stageHeatmapData.find(d => d.confederation === c && d.year === yr);
       cellData.push({ confederation: c, year: yr, rec });
@@ -369,10 +371,10 @@ function renderStageHeatmap() {
   g.selectAll('rect.cell')
     .data(cellData)
     .join('rect')
-    .attr('x', d => x(d.year) - cellW / 2 + 1)
-    .attr('y', d => y(d.confederation))
-    .attr('width', cellW - 2)
-    .attr('height', y.bandwidth())
+    .attr('x', d => x(d.confederation))
+    .attr('y', d => y(d.year) - cellH / 2 + 1)
+    .attr('width', x.bandwidth())
+    .attr('height', cellH - 2)
     .attr('rx', 2)
     .attr('fill', d => d.rec ? stageColorScale(d.rec.rank) : '#f0f0ee')
     .style('cursor', d => d.rec ? 'pointer' : 'default')
@@ -389,11 +391,11 @@ function renderStageHeatmap() {
   g.selectAll('text.cell-label')
     .data(cellData.filter(d => d.rec))
     .join('text')
-    .attr('x', d => x(d.year))
-    .attr('y', d => y(d.confederation) + y.bandwidth() / 2)
+    .attr('x', d => x(d.confederation) + x.bandwidth() / 2)
+    .attr('y', d => y(d.year))
     .attr('dy', '0.35em')
     .attr('text-anchor', 'middle')
-    .style('font-size', '11px').style('font-weight', '600')
+    .style('font-size', '9.5px').style('font-weight', '600')
     .style('pointer-events', 'none')
     .style('fill', d => stageTextColor(d.rec.rank))
     .text(d => STAGE_LABEL_SHORT[d.rec.rank]);
