@@ -48,6 +48,7 @@
   <p style="margin:0 0 18px;"><a href="index.html" class="back-link">&larr; חזרה לעמוד הראשי</a></p>
   <h1>פסיכולוגיה ומנטליות</h1>
   <p class="subtitle">זום פנימה לתוך המשחקים עצמם: האם הכדורגל נהיה זהיר יותר, מתי שערים באמת נכבשים, האם הפחד מהפסד שינה איך משחקי נוקאאוט מסתיימים, ומה קורה בפועל לקבוצה שניצחה בפעם הקודמת.</p>
+  <p class="subtitle" style="background:#eef3f8; border-radius:6px; padding:8px 12px; display:inline-block;">💡 לחצו על נקודת שנה ב"האם המונדיאל נהיה יותר הגנתי" או ב"קללת האלופה" — אותה שנה (והעשור שלה) תודגש גם בתרשימים האחרים. ניתן לבחור כמה שנים בו-זמנית; הבלתי-נבחרות יופיעו באפור. לחצו שוב על שנה כדי לבטל את בחירתה.</p>
 
   <div class="grid">
 
@@ -106,6 +107,36 @@ const goalTimingData = [{"bin": "0-15", "goals": 349}, {"bin": "16-30", "goals":
 const knockoutDramaData = [{"decade": 1930, "total_knockout": 38, "et_pct": 23.7, "pens_pct": 0.0}, {"decade": 1950, "total_knockout": 16, "et_pct": 6.2, "pens_pct": 0.0}, {"decade": 1960, "total_knockout": 16, "et_pct": 6.2, "pens_pct": 0.0}, {"decade": 1970, "total_knockout": 12, "et_pct": 33.3, "pens_pct": 0.0}, {"decade": 1980, "total_knockout": 20, "et_pct": 30.0, "pens_pct": 20.0}, {"decade": 1990, "total_knockout": 48, "et_pct": 33.3, "pens_pct": 20.8}, {"decade": 2000, "total_knockout": 32, "et_pct": 34.4, "pens_pct": 18.8}, {"decade": 2010, "total_knockout": 48, "et_pct": 35.4, "pens_pct": 20.8}, {"decade": 2020, "total_knockout": 16, "et_pct": 31.2, "pens_pct": 31.2}];
 const championsCurseData = [{"defending_champion": "אורוגוואי", "won_year": 1930, "next_year": 1934, "result_rank": 0}, {"defending_champion": "איטליה", "won_year": 1934, "next_year": 1938, "result_rank": 7}, {"defending_champion": "איטליה", "won_year": 1938, "next_year": 1950, "result_rank": 1}, {"defending_champion": "אורוגוואי", "won_year": 1950, "next_year": 1954, "result_rank": 5}, {"defending_champion": "גרמניה", "won_year": 1954, "next_year": 1958, "result_rank": 5}, {"defending_champion": "ברזיל", "won_year": 1958, "next_year": 1962, "result_rank": 7}, {"defending_champion": "ברזיל", "won_year": 1962, "next_year": 1966, "result_rank": 1}, {"defending_champion": "אנגליה", "won_year": 1966, "next_year": 1970, "result_rank": 4}, {"defending_champion": "ברזיל", "won_year": 1970, "next_year": 1974, "result_rank": 5}, {"defending_champion": "גרמניה", "won_year": 1974, "next_year": 1978, "result_rank": 2}, {"defending_champion": "ארגנטינה", "won_year": 1978, "next_year": 1982, "result_rank": 2}, {"defending_champion": "איטליה", "won_year": 1982, "next_year": 1986, "result_rank": 3}, {"defending_champion": "ארגנטינה", "won_year": 1986, "next_year": 1990, "result_rank": 6}, {"defending_champion": "גרמניה", "won_year": 1990, "next_year": 1994, "result_rank": 4}, {"defending_champion": "ברזיל", "won_year": 1994, "next_year": 1998, "result_rank": 6}, {"defending_champion": "צרפת", "won_year": 1998, "next_year": 2002, "result_rank": 1}, {"defending_champion": "ברזיל", "won_year": 2002, "next_year": 2006, "result_rank": 4}, {"defending_champion": "איטליה", "won_year": 2006, "next_year": 2010, "result_rank": 1}, {"defending_champion": "ספרד", "won_year": 2010, "next_year": 2014, "result_rank": 1}, {"defending_champion": "גרמניה", "won_year": 2014, "next_year": 2018, "result_rank": 1}, {"defending_champion": "צרפת", "won_year": 2018, "next_year": 2022, "result_rank": 6}];
 
+/* ---------------- Cross-chart linking: click one or more tournament years anywhere, highlight them everywhere (persistent, multi-select) ---------------- */
+let selectedYears = new Set();
+
+function applyYearHighlight() {
+  if (selectedYears.size === 0) {
+    d3.selectAll('[data-year]').style('opacity', null);
+    d3.selectAll('[data-decade]').style('opacity', null);
+    return;
+  }
+  d3.selectAll('[data-year]').style('opacity', function() {
+    return selectedYears.has(+this.getAttribute('data-year')) ? 1 : 0.15;
+  });
+  const selectedDecades = new Set(Array.from(selectedYears).map(yr => Math.floor(yr / 10) * 10));
+  d3.selectAll('[data-decade]').style('opacity', function() {
+    return selectedDecades.has(+this.getAttribute('data-decade')) ? 1 : 0.15;
+  });
+}
+function toggleYearSelection(year) {
+  if (selectedYears.has(year)) {
+    selectedYears.delete(year);
+  } else {
+    selectedYears.add(year);
+  }
+  applyYearHighlight();
+}
+function reapplyYearSelection() {
+  applyYearHighlight();
+}
+
+
 function renderGoalsTrend() {
   const container = document.getElementById('goalsTrendChart');
   const tooltip = document.getElementById('goalsTrendTooltip');
@@ -162,6 +193,7 @@ function renderGoalsTrend() {
     .attr('cx', d => x(d.year))
     .attr('cy', d => y(d.avg))
     .attr('r', 4)
+    .attr('data-year', d => d.year)
     .attr('fill', '#1f77b4')
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.2)
@@ -173,7 +205,9 @@ function renderGoalsTrend() {
       tooltip.style.opacity = '1';
       tooltip.innerHTML = `<b>${d.year}</b><br>${d.goals} שערים / ${d.matches} משחקים<br>${d.avg.toFixed(2)} למשחק`;
     })
-    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', (event, d) => toggleYearSelection(d.year));
+  reapplyYearSelection();
 }
 
 renderGoalsTrend();
@@ -311,6 +345,7 @@ function renderKnockoutDrama() {
       .attr('x', x1(key))
       .attr('width', x1.bandwidth())
       .attr('rx', 3)
+      .attr('data-decade', d => d.decade)
       .attr('fill', dramaColors[key])
       .attr('y', innerH)
       .attr('height', 0)
@@ -380,6 +415,7 @@ function renderCurses() {
     .attr('cx', d => x(d.next_year))
     .attr('cy', d => y(d.result_rank))
     .attr('r', 6)
+    .attr('data-year', d => d.next_year)
     .attr('fill', d => d.result_rank <= 1 ? '#d62728' : (d.result_rank === 7 ? '#d4af37' : '#1f77b4'))
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.4)
@@ -391,7 +427,9 @@ function renderCurses() {
       tooltip.style.opacity = '1';
       tooltip.innerHTML = `<b>${d.defending_champion}</b> · מגינה על תואר ${d.won_year}<br>${d.next_year}: ${CURSE_RANK_LABEL[d.result_rank]}`;
     })
-    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', (event, d) => toggleYearSelection(d.next_year));
+  reapplyYearSelection();
 }
 
 renderCurses();
