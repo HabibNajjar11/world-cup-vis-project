@@ -115,6 +115,7 @@
   <p style="margin:0 0 18px;"><a href="index.html" class="back-link">&larr; חזרה לעמוד הראשי</a></p>
   <h1>גאופוליטיקה ואיזון כוחות</h1>
   <p class="subtitle">כיצד ההתרחבות הגלובלית של הכדורגל שינתה — ולא שינתה — את מרכז הכובד של הטורניר. מונדיאל הגברים, 1930–2022, 22 מהדורות.</p>
+  <p class="subtitle" style="background:#eef3f8; border-radius:6px; padding:8px 12px; display:inline-block;">💡 לחצו על קונפדרציה בכל אחד משלושת התרשימים למטה (עליית הקונפדרציות, מפת החום, תרשים העוגה) — היא תודגש בו-זמנית בשני התרשימים האחרים. ניתן לבחור כמה קונפדרציות בו-זמנית (למשל אפריקה ואירופה יחד); הבלתי-נבחרות יופיעו באפור. לחצו שוב על קונפדרציה כדי לבטל את בחירתה.</p>
 
   <div class="grid">
 
@@ -206,6 +207,41 @@ function textColorFor(hex) {
   return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
 }
 
+/* ---------------- Cross-chart linking: click one or more confederations anywhere, highlight them everywhere (persistent, multi-select) ---------------- */
+let selectedConfeds = new Set();
+
+function applyConfedHighlight() {
+  if (selectedConfeds.size === 0) {
+    d3.selectAll('[data-confed]').style('opacity', null);
+    d3.selectAll('[data-confed-label]').style('font-weight', null).style('fill', null).style('color', null);
+    d3.selectAll('[data-confed-swatch]').style('background', function() {
+      return this.getAttribute('data-original-color');
+    });
+    return;
+  }
+  d3.selectAll('[data-confed]').style('opacity', function() {
+    return selectedConfeds.has(this.getAttribute('data-confed')) ? 1 : 0.15;
+  });
+  d3.selectAll('[data-confed-label]').style('font-weight', function() {
+    return selectedConfeds.has(this.getAttribute('data-confed-label')) ? 700 : 400;
+  });
+  d3.selectAll('[data-confed-swatch]').style('background', function() {
+    const c = this.getAttribute('data-confed-swatch');
+    return selectedConfeds.has(c) ? this.getAttribute('data-original-color') : '#ccc';
+  });
+}
+function toggleConfedSelection(confed) {
+  if (selectedConfeds.has(confed)) {
+    selectedConfeds.delete(confed);
+  } else {
+    selectedConfeds.add(confed);
+  }
+  applyConfedHighlight();
+}
+function reapplyConfedSelection() {
+  applyConfedHighlight();
+}
+
 function renderConfedShare() {
   const container = document.getElementById('confedShareChart');
   const tooltip = document.getElementById('confedShareTooltip');
@@ -261,6 +297,7 @@ function renderConfedShare() {
     const c = s.key;
     g.append('path')
       .datum(s)
+      .attr('data-confed', c)
       .attr('fill', confedColors[c])
       .attr('fill-opacity', 0.88)
       .attr('d', areaGen);
@@ -286,7 +323,19 @@ function renderConfedShare() {
       const lines = rows.map(r => `${r.confederation}: ${r.teams} נבחרות (${r.pct}%)`).join('<br>');
       tooltip.innerHTML = `<b>${yr}</b><br>${lines}`;
     })
-    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', function(event, yr) {
+      // determine which confederation's band was clicked, for cross-chart linking
+      const [, mouseY] = d3.pointer(event, g.node());
+      const yVal = y.invert(mouseY);
+      let clickedConfed = null;
+      for (const s of series) {
+        const seg = s.find(d => d.data.year === yr);
+        if (seg && yVal >= seg[0] && yVal <= seg[1]) { clickedConfed = s.key; break; }
+      }
+      if (clickedConfed) toggleConfedSelection(clickedConfed);
+    });
+  reapplyConfedSelection();
 }
 
 (function buildConfedLegend() {
@@ -294,7 +343,9 @@ function renderConfedShare() {
   confedOrder.forEach(c => {
     const item = document.createElement('span');
     item.className = 'item';
-    item.innerHTML = `<span class="swatch" style="background:${confedColors[c]}"></span>${confedFullName[c]}`;
+    item.style.cursor = 'pointer';
+    item.innerHTML = `<span class="swatch" data-confed-swatch="${c}" data-original-color="${confedColors[c]}" style="background:${confedColors[c]}"></span>${confedFullName[c]}`;
+    item.addEventListener('click', () => toggleConfedSelection(c));
     el.appendChild(item);
   });
 })();
@@ -347,7 +398,11 @@ function renderStageHeatmap() {
   g.append('g').attr('class', 'axis')
     .call(d3.axisTop(x).tickSize(0))
     .call(sel => sel.select('.domain').remove())
-    .selectAll('text').style('font-size', '11.5px').style('font-weight', '600');
+    .selectAll('text')
+      .style('font-size', '11.5px').style('font-weight', '600')
+      .attr('data-confed-label', c => c)
+      .style('cursor', 'pointer')
+      .on('click', (event, c) => toggleConfedSelection(c));
 
   const tickYears = years.filter((yr, i) => i % 2 === 0);
   g.selectAll('text.rowlabel')
@@ -376,6 +431,7 @@ function renderStageHeatmap() {
     .attr('width', x.bandwidth())
     .attr('height', cellH - 2)
     .attr('rx', 2)
+    .attr('data-confed', d => d.confederation)
     .attr('fill', d => d.rec ? stageColorScale(d.rec.rank) : '#f0f0ee')
     .style('cursor', d => d.rec ? 'pointer' : 'default')
     .on('mousemove', function(event, d) {
@@ -386,7 +442,9 @@ function renderStageHeatmap() {
       tooltip.style.opacity = '1';
       tooltip.innerHTML = `<b>${d.confederation} · ${d.year}</b><br>${STAGE_LABEL_FULL[d.rec.rank]}<br>${d.rec.team}`;
     })
-    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', (event, d) => toggleConfedSelection(d.confederation));
+  reapplyConfedSelection();
 
   g.selectAll('text.cell-label')
     .data(cellData.filter(d => d.rec))
@@ -591,6 +649,7 @@ function renderWinnersPie() {
     .data(arcs)
     .join('path')
     .attr('d', arc)
+    .attr('data-confed', d => d.data.confederation)
     .attr('fill', d => confedColors[d.data.confederation])
     .attr('stroke', '#fff')
     .attr('stroke-width', 2)
@@ -606,6 +665,7 @@ function renderWinnersPie() {
     })
     .on('mouseleave', () => { tooltip.style.opacity = '0'; })
     .on('click', (event, d) => {
+      toggleConfedSelection(d.data.confederation);
       if (hasCountryData(d.data.confederation)) {
         pieDrillConfed = d.data.confederation;
         renderWinnersPie();
@@ -625,15 +685,18 @@ function renderWinnersPie() {
     const pct = 100 * d.titles / grandTotal;
     const row = document.createElement('div');
     row.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:13px;' + (hasCountryData(d.confederation) ? ' cursor:pointer;' : '');
-    row.innerHTML = `<span style="width:12px; height:12px; border-radius:3px; background:${confedColors[d.confederation]}; flex-shrink:0;"></span>
+    row.innerHTML = `<span data-confed-swatch="${d.confederation}" data-original-color="${confedColors[d.confederation]}" style="width:12px; height:12px; border-radius:3px; background:${confedColors[d.confederation]}; flex-shrink:0;"></span>
       <span style="flex:1;">${confedFullName[d.confederation]}</span>
       <span style="font-weight:600;">${d.titles === 0 ? '0%' : pct.toFixed(1) + '%'}</span>
       <span style="color:#888; font-size:12px;">(${d.titles} תארים)</span>`;
     if (hasCountryData(d.confederation)) {
-      row.addEventListener('click', () => { pieDrillConfed = d.confederation; renderWinnersPie(); });
+      row.addEventListener('click', () => { toggleConfedSelection(d.confederation); pieDrillConfed = d.confederation; renderWinnersPie(); });
+    } else {
+      row.addEventListener('click', () => toggleConfedSelection(d.confederation));
     }
     legendDiv.appendChild(row);
   });
+  reapplyConfedSelection();
 }
 
 renderWinnersPie();
