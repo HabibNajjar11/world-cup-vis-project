@@ -45,11 +45,12 @@
   <p style="margin:0 0 18px;"><a href="index.html" class="back-link">&larr; חזרה לעמוד הראשי</a></p>
   <h1>תרבות, אוהדים ומשמעת</h1>
   <p class="subtitle">ההקשר החיצוני: מי מגיע לצפות, עד כמה אגרסיבי השיפוט במגרש, ומי בעצם נבחר לנהל נבחרת מנצחת.</p>
+  <p class="subtitle" style="background:#eef3f8; border-radius:6px; padding:8px 12px; display:inline-block;">💡 לחצו על נקודת שנה ב"גאות הצפייה" או ב"מדד האגרסיביות" — אותה שנה תודגש גם בתרשים השני. ניתן לבחור כמה שנים בו-זמנית; הבלתי-נבחרות יופיעו באפור. לחצו שוב על שנה כדי לבטל את בחירתה.</p>
 
   <div class="grid">
 
     <div class="card" id="attendance-section">
-      <h2>הנוכחות באצטדיונים</h2>
+      <h2>גאות הצפייה באצטדיונים</h2>
       <p class="desc">ממוצע נוכחות למשחק, בכל מונדיאל. ציר X — שנת הטורניר. ציר Y — ממוצע צופים למשחק. השיא של ארה"ב 1994 עדיין עומד כמונדיאל עם הצפייה הגבוהה ביותר בהיסטוריה — תוצאה של אירוח משחקים בתוך אצטדיוני פוטבול אמריקאי ענקיים, שנבנו לספורט אחר לגמרי.</p>
       <p class="howto">איך להשתמש: עברו עם העכבר מעל כל נקודה לפרטים המדויקים.</p>
       <div class="chart-container">
@@ -70,7 +71,7 @@
     </div>
 
     <div class="card" id="managers-section">
-      <h2>מאמן מקומי או זר?</h2>
+      <h2>מאמן מקומי או ייבוא זר?</h2>
       <p class="desc">השלב הרחוק הממוצע שאליו הגיעו נבחרות, בהשוואה בין נבחרות שניהל אותן מאמן מבן ארצן לבין נבחרות שניהל אותן מאמן זר. ציר X — השלב הממוצע (בסולם המדורג: 1 = שלב הבתים, 2 = שלב בתים שני, 3 = שמינית גמר, 4 = רבע גמר, 5 = חצי גמר, 6 = גמר, 7 = אלופה). ציר Y — סוג המאמן.</p>
       <p class="howto">איך להשתמש: לחצו על כל אחת מהעמודות כדי לפלח אותה לפי כמה מונדיאלים קודמים אותו מאמן כבר ניהל.</p>
       <div id="managerBackRow" style="display:none; margin-bottom:10px;">
@@ -105,6 +106,31 @@ const attendanceData = [{"year": 1930, "matches": 18, "total_attendance": 590549
 const cardsData = [{"year": 1970, "matches": 32, "total_cards": 52, "cards_per_match": 1.62}, {"year": 1974, "matches": 38, "total_cards": 92, "cards_per_match": 2.42}, {"year": 1978, "matches": 38, "total_cards": 49, "cards_per_match": 1.29}, {"year": 1982, "matches": 52, "total_cards": 104, "cards_per_match": 2.0}, {"year": 1986, "matches": 52, "total_cards": 142, "cards_per_match": 2.73}, {"year": 1990, "matches": 52, "total_cards": 179, "cards_per_match": 3.44}, {"year": 1994, "matches": 52, "total_cards": 236, "cards_per_match": 4.54}, {"year": 1998, "matches": 64, "total_cards": 272, "cards_per_match": 4.25}, {"year": 2002, "matches": 64, "total_cards": 277, "cards_per_match": 4.33}, {"year": 2006, "matches": 64, "total_cards": 335, "cards_per_match": 5.23}, {"year": 2010, "matches": 64, "total_cards": 263, "cards_per_match": 4.11}, {"year": 2014, "matches": 64, "total_cards": 191, "cards_per_match": 2.98}, {"year": 2018, "matches": 64, "total_cards": 223, "cards_per_match": 3.48}, {"year": 2022, "matches": 64, "total_cards": 225, "cards_per_match": 3.52}];
 const managersSummary = {"top": {"foreign": {"avg_rank": 2.109, "count": 137}, "native": {"avg_rank": 2.92, "count": 364}}, "drill": {"foreign|0": {"avg_rank": 2.169, "count": 89}, "native|0": {"avg_rank": 2.767, "count": 287}, "native|1": {"avg_rank": 3.357, "count": 56}, "foreign|1": {"avg_rank": 2.25, "count": 32}, "native|2+": {"avg_rank": 3.857, "count": 21}, "foreign|2+": {"avg_rank": 1.5, "count": 16}}};
 const managerAgesData = [{"manager": "אלברטו סופיסי", "team": "אורוגוואי", "year": 1930, "age": 31}, {"manager": "ויטוריו פוצו", "team": "איטליה", "year": 1934, "age": 48}, {"manager": "ויטוריו פוצו", "team": "איטליה", "year": 1938, "age": 52}, {"manager": "חואן לופס", "team": "אורוגוואי", "year": 1950, "age": 42}, {"manager": "זפ הרברגר", "team": "גרמניה", "year": 1954, "age": 57}, {"manager": "ויסנטה פאולה", "team": "ברזיל", "year": 1958, "age": 48}, {"manager": "איימורה מוריירה", "team": "ברזיל", "year": 1962, "age": 50}, {"manager": "אלף רמזי", "team": "אנגליה", "year": 1966, "age": 46}, {"manager": "מריו זגאלו", "team": "ברזיל", "year": 1970, "age": 38}, {"manager": "הלמוט שן", "team": "גרמניה", "year": 1974, "age": 58}, {"manager": "סזאר לואיס מנוטי", "team": "ארגנטינה", "year": 1978, "age": 39}, {"manager": "אנצו בארצוט", "team": "איטליה", "year": 1982, "age": 54}, {"manager": "קרלוס בילארדו", "team": "ארגנטינה", "year": 1986, "age": 48}, {"manager": "פרנץ בקנבאואר", "team": "גרמניה", "year": 1990, "age": 44}, {"manager": "קרלוס אלברטו פריירה", "team": "ברזיל", "year": 1994, "age": 51}, {"manager": "אימה ז'אקה", "team": "צרפת", "year": 1998, "age": 56}, {"manager": "לואיז פליפה סקולארי", "team": "ברזיל", "year": 2002, "age": 53}, {"manager": "מרצ'לו ליפי", "team": "איטליה", "year": 2006, "age": 58}, {"manager": "ויסנטה דל בוסקה", "team": "ספרד", "year": 2010, "age": 59}, {"manager": "יואכים לב", "team": "גרמניה", "year": 2014, "age": 54}, {"manager": "דידייה דשאן", "team": "צרפת", "year": 2018, "age": 49}, {"manager": "ליונל סקלוני", "team": "ארגנטינה", "year": 2022, "age": 44}];
+
+/* ---------------- Cross-chart linking: click one or more tournament years anywhere, highlight them everywhere (persistent, multi-select) ---------------- */
+let selectedYears = new Set();
+
+function applyYearHighlight() {
+  if (selectedYears.size === 0) {
+    d3.selectAll('[data-year]').style('opacity', null);
+    return;
+  }
+  d3.selectAll('[data-year]').style('opacity', function() {
+    return selectedYears.has(+this.getAttribute('data-year')) ? 1 : 0.15;
+  });
+}
+function toggleYearSelection(year) {
+  if (selectedYears.has(year)) {
+    selectedYears.delete(year);
+  } else {
+    selectedYears.add(year);
+  }
+  applyYearHighlight();
+}
+function reapplyYearSelection() {
+  applyYearHighlight();
+}
+
 
 function renderAttendance() {
   const container = document.getElementById('attendanceChart');
@@ -170,6 +196,7 @@ function renderAttendance() {
     .attr('cx', d => x(d.year))
     .attr('cy', d => y(d.avg_attendance))
     .attr('r', d => d.year === 1994 ? 6 : 3.5)
+    .attr('data-year', d => d.year)
     .attr('fill', d => d.year === 1994 ? '#d4af37' : '#1f77b4')
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.2)
@@ -181,7 +208,9 @@ function renderAttendance() {
       tooltip.style.opacity = '1';
       tooltip.innerHTML = `<b>${d.year}</b><br>${d.avg_attendance.toLocaleString()} ממוצע נוכחות<br>${d.total_attendance.toLocaleString()} סה"כ על פני ${d.matches} משחקים`;
     })
-    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', (event, d) => toggleYearSelection(d.year));
+  reapplyYearSelection();
 }
 
 renderAttendance();
@@ -236,6 +265,7 @@ function renderCards() {
     .attr('cx', d => x(d.year))
     .attr('cy', d => y(d.cards_per_match))
     .attr('r', d => d.year === 2006 ? 6.5 : 4)
+    .attr('data-year', d => d.year)
     .attr('fill', d => d.year === 2006 ? '#d4af37' : '#d62728')
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.2)
@@ -247,7 +277,9 @@ function renderCards() {
       tooltip.style.opacity = '1';
       tooltip.innerHTML = `<b>${d.year}</b><br>${d.cards_per_match} כרטיסים/משחק<br>${d.total_cards} סה"כ על פני ${d.matches} משחקים`;
     })
-    .on('mouseleave', () => { tooltip.style.opacity = '0'; });
+    .on('mouseleave', () => { tooltip.style.opacity = '0'; })
+    .on('click', (event, d) => toggleYearSelection(d.year));
+  reapplyYearSelection();
 }
 
 renderCards();
